@@ -7,17 +7,15 @@ jobs:
   include:
   - os: linux
     name: Linux E+ Tests
-    language: python
-    python: 3.6
     before_script: pip3 install -r requirements.txt
     script: python3 setup.py run
   - os: osx
     name: Mac E+ Tests
     osx_image: xcode11.2
-    language: generic
     before_script: pip3 install -r requirements.txt
     script: python3 setup.py run
-#  - os: windows
-#    name: Windows Release
-#    install: choco install python3 7zip
-#    script: scripts/build_windows_travis.sh
+  - os: windows
+    name: Windows Release
+    install: choco install python3
+    before_script: pip3 install -r requirements.txt
+    script: python3 setup.py run
