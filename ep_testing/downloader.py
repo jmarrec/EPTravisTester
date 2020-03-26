@@ -122,7 +122,8 @@ class Downloader:
         """Attempts to extract the downloaded package, returns the path to the E+ install subdirectory"""
         saved_working_directory = os.getcwd()
         os.chdir(self.download_dir)
-        shutil.rmtree(self.extract_path)
+        if os.path.exists(self.extract_path):
+            shutil.rmtree(self.extract_path)
         try:
             os.makedirs(self.extract_path)
         except Exception as e:
