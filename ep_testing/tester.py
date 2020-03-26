@@ -27,7 +27,7 @@ class TestPlainDDRunEPlusFile(BaseTest):
         idf_path = os.path.join(install_root, 'ExampleFiles', test_file)
         dev_null = open(os.devnull, 'w')
         try:
-            check_call([eplus_binary, '-D', idf_path], stdout=dev_null, stderr=STDOUT)
+            check_call([eplus_binary, '-D', idf_path])  # , stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('EnergyPlus failed!')
