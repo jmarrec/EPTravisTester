@@ -1,0 +1,19 @@
+
+os: linux  # just a default OS, will be overridden in jobs list
+dist: xenial
+language: python
+
+jobs:
+  include:
+  - os: linux
+    name: Linux E+ Tests
+    before_script: pip install -r requirements.txt
+    script: python setup.py run
+  - os: osx
+    name: Mac E+ Tests
+    before_script: pip install -r requirements.txt
+    script: python setup.py run
+#  - os: windows
+#    name: Windows Release
+#    install: choco install python3 7zip
+#    script: scripts/build_windows_travis.sh
