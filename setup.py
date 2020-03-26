@@ -1,6 +1,7 @@
 import distutils.cmd
 import distutils.log
 from setuptools import setup
+from tempfile import mkdtemp
 from ep_testing.downloader import Downloader
 from ep_testing.tester import Tester
 
@@ -23,7 +24,7 @@ class Runner(distutils.cmd.Command):
     def run(self):
         """Run command."""
         self.announce('Attempting to test tag name: %s' % TAG_NAME, level=distutils.log.INFO)
-        d = Downloader(TAG_NAME, '/tmp', self.announce)
+        d = Downloader(TAG_NAME, mkdtemp(), self.announce)
         self.announce('EnergyPlus package extracted to: ' + d.extracted_install_path(), level=distutils.log.INFO)
         t = Tester(d.extracted_install_path())
         # unhandled exceptions should cause this to fail

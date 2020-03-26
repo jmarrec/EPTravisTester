@@ -39,6 +39,12 @@ class Tester:
         self.install_path = install_path
 
     def run(self):
+        saved_path = os.getcwd()
         os.chdir(self.install_path)
-        TestPlainDDRunEPlusFile().run(self.install_path, {'testfile': '1ZoneUncontrolled.idf'})
-        TestPlainDDRunEPlusFile().run(self.install_path, {'testfile': 'PythonPluginCustomOutputVariable.idf'})
+        try:
+            TestPlainDDRunEPlusFile().run(self.install_path, {'testfile': '1ZoneUncontrolled.idf'})
+            TestPlainDDRunEPlusFile().run(self.install_path, {'testfile': 'PythonPluginCustomOutputVariable.idf'})
+        except Exception:
+            raise
+        finally:
+            os.chdir(saved_path)

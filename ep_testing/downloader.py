@@ -36,16 +36,18 @@ class Downloader:
         if this_platform == 'Linux':
             self.asset_pattern = 'Linux-x86_64.tar.gz'
             target_file_name = 'ep.tar.gz'
+            # tar -xzf ep.tar.gz -C ep_package
             self.extract_command = ['tar', '-xzf', target_file_name, '-C', self.extract_path]
         elif this_platform == 'Darwin':
             self.asset_pattern = 'Darwin-x86_64.tar.gz'
             target_file_name = 'ep.tar.gz'
+            # tar -xzf ep.tar.gz -C ep_package
             self.extract_command = ['tar', '-xzf', target_file_name, '-C', self.extract_path]
         elif this_platform == 'Windows':
             self.asset_pattern = 'Windows-x86_64.zip'
-            # target_file_name = 'ep.zip'
-            # extract_command = ['tar', '-xzf', target_file_name, '-C', self.extract_path]
-            raise EPTestingException('Windows extraction not implemented yet')
+            target_file_name = 'ep.zip'
+            # 7z x ep.zip -oep_package
+            self.extract_command = ['7z.exe', 'x', target_file_name, '-o' + self.extract_path]
         else:
             raise EPTestingException('Unknown platform -- ' + this_platform)
         self.download_path = os.path.join(download_dir, target_file_name)
