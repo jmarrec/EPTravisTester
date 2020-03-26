@@ -24,7 +24,7 @@ class Runner(distutils.cmd.Command):
         """Run command."""
         self.announce('Attempting to test tag name: %s' % TAG_NAME, level=distutils.log.INFO)
         d = Downloader(TAG_NAME, '/tmp', self.announce)
-        self.announce(d.extracted_install_path(), level=distutils.log.INFO)
+        self.announce('EnergyPlus package extracted to: ' + d.extracted_install_path(), level=distutils.log.INFO)
         t = Tester(d.extracted_install_path())
         # unhandled exceptions should cause this to fail
         t.run()
