@@ -1,7 +1,8 @@
 
 os: linux  # just a default OS, will be overridden in jobs list
 dist: xenial
-language: generic
+language: python
+python: 3.6
 
 jobs:
   include:
