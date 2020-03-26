@@ -1,17 +1,20 @@
 
 os: linux  # just a default OS, will be overridden in jobs list
 dist: xenial
-language: python
-python: 3.6
+
 
 jobs:
   include:
   - os: linux
     name: Linux E+ Tests
+    language: python
+    python: 3.6
     before_script: pip install -r requirements.txt
     script: python setup.py run
   - os: osx
     name: Mac E+ Tests
+    osx_image: xcode11.2
+    language: generic
     before_script: pip install -r requirements.txt
     script: python setup.py run
 #  - os: windows
