@@ -7,6 +7,7 @@ jobs:
   include:
   - os: linux
     name: Linux E+ Tests
+    language: python
     python: 3.6
     before_script: pip3 install -r requirements.txt
     script: python3 setup.py run
