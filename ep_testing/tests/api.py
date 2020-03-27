@@ -1,6 +1,5 @@
 import os
 import platform
-import shutil
 from tempfile import mkdtemp, mkstemp
 from subprocess import check_call, check_output, CalledProcessError, STDOUT
 
