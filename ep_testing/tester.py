@@ -35,6 +35,8 @@ class Tester:
                 TestCAPIAccess().run(
                     self.install_path, {}
                 )
+            else:
+                print("Only running C API on Linux and Mac FOR NOW")
             if system() == 'Linux':
                 TestVersionInfoInDocumentation().run(
                     self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.THIS_VERSION}
@@ -44,7 +46,7 @@ class Tester:
                 )
 
             else:
-                print("Skipping API and Doc stuff on Linux FOR NOW!!!!")
+                print("Only running Python API and Doc stuff on Linux FOR NOW!!!!")
         except Exception:
             raise
         finally:

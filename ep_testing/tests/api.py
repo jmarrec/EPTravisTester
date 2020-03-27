@@ -1,5 +1,6 @@
 import os
 import platform
+import shutil
 from tempfile import mkdtemp, mkstemp
 from subprocess import check_call, check_output, CalledProcessError, STDOUT
 
@@ -52,13 +53,19 @@ class TestCAPIAccess(BaseTest):
 
     @staticmethod
     def _api_cmakelists_content(install_path: str) -> str:
+        if platform.system() == 'Linux':
+            lib_file_name = 'libenergyplusapi.so'
+        elif platform.system() == 'Darwin':
+            lib_file_name = 'libenergyplusapi.dylib'
+        else:  # windows
+            lib_file_name = 'energyplusapi.dll'
         return """
 cmake_minimum_required(VERSION 3.10)
 project(TestCAPIAccess)
 include_directories("{EPLUS_INSTALL_NO_SLASH}/include")
 add_executable(TestCAPIAccess func.c)
-target_link_libraries(TestCAPIAccess "{EPLUS_INSTALL_NO_SLASH}/libenergyplusapi.so")
-        """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path)
+target_link_libraries(TestCAPIAccess "{EPLUS_INSTALL_NO_SLASH}/{LIB_FILE_NAME}")
+        """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
 
     @staticmethod
     def _api_script_content() -> str:
@@ -73,6 +80,7 @@ int main() {
     for (int temp=5; temp<35; temp+=10) {
         Real64 thisTemp = (float)temp;
         Real64 specificHeat = glycolSpecificHeat(glycol, thisTemp);
+        printf("Cp = %8.3f\\n", specificHeat);
     }
     glycolDelete(glycol);
     printf("Hello, world!\\n");
@@ -82,6 +90,7 @@ int main() {
     def run(self, install_root: str, kwargs: dict):
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         build_dir = mkdtemp()
+        # print("Build dir set as: " + build_dir)
         c_file_name = 'func.c'
         c_file_path = os.path.join(build_dir, c_file_name)
         with open(c_file_path, 'w') as f:
@@ -99,11 +108,14 @@ int main() {
             if platform.system() == 'Linux' or platform.system() == 'Darwin':
                 os.makedirs(cmake_build_dir)
                 os.chdir(cmake_build_dir)
+                my_env = os.environ.copy()
+                if platform.system() == 'Darwin':  # my local comp didn't have cmake in path except in interact shells
+                    my_env["PATH"] = "/usr/local/bin:" + my_env["PATH"]
                 command_line = [
                     'cmake',
                     '..'
                 ]
-                check_call(command_line, stdout=dev_null, stderr=STDOUT)
+                check_call(command_line, stdout=dev_null, stderr=STDOUT, env=my_env)
                 command_line = [
                     'make',
                     '-j2'
@@ -114,9 +126,14 @@ int main() {
             print(' [COMPILED] ', end='')
         except CalledProcessError:
             raise EPTestingException('C API Wrapper Compilation failed!')
+        # here is where it is limited -- we have to run from the e+ install dir
         try:
             if platform.system() == 'Linux' or platform.system() == 'Darwin':
-                command_line = [os.path.join(cmake_build_dir, 'TestCAPIAccess')]
+                built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
+                target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
+                check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
+                command_line = [target_binary_path]
+                os.chdir(install_root)
             else:  # windows
                 command_line = []
             check_call(command_line, stdout=dev_null, stderr=STDOUT)
