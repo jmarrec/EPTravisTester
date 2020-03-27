@@ -21,9 +21,11 @@ class TestExpandObjectsAndRun(BaseTest):
         try:
             copyfile(original_idf_path, target_idf_path)
         except Exception as e:
-            raise EPTestingException('Could not copy file for expansion, original file "%s", target file "%s"' % (
-                original_idf_path, target_idf_path
-            ))
+            raise EPTestingException(
+                'Could not copy file for expansion, original file "%s", target file "%s", reason: %s' % (
+                    original_idf_path, target_idf_path, str(e)
+                )
+            )
         expand_objects_binary = os.path.join(install_root, 'ExpandObjects')
         dev_null = open(os.devnull, 'w')
         try:
