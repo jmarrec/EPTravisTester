@@ -116,6 +116,7 @@ class Downloader:
     def _download_asset(self, asset: dict) -> None:
         try:
             _, headers = urllib.request.urlretrieve(asset['browser_download_url'], self.download_path)
+            self._my_print('Asset downloaded to ' + self.download_path)
         except Exception as e:
             raise EPTestingException(
                 'Could not download asset from %s; error: %s' % (asset['browser_download_url'], str(e))
@@ -134,7 +135,7 @@ class Downloader:
         try:
             check_call(self.extract_command)
         except CalledProcessError as e:
-            self._my_print("Extraction failed with this error: " + str(e))
+            raise EPTestingException("Extraction failed with this error: " + str(e))
         # should result in a single new directory inside the extract path, like: /extract/path/EnergyPlus-V1-abc-Linux
         all_sub_folders = [f.path for f in os.scandir(self.extract_path) if f.is_dir()]
         if len(all_sub_folders) > 1:
