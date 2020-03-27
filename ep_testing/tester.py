@@ -32,15 +32,17 @@ class Tester:
                 self.install_path, {'last_version': self.config.TAG_LAST_VERSION}
             )
             if system() == 'Linux' or system() == 'Darwin':
+                TestCAPIAccess().run(
+                    self.install_path, {}
+                )
+            if system() == 'Linux':
                 TestVersionInfoInDocumentation().run(
                     self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.THIS_VERSION}
                 )
                 TestPythonAPIAccess().run(
                     self.install_path, {}
                 )
-                TestCAPIAccess().run(
-                    self.install_path, {}
-                )
+
             else:
                 print("Skipping API and Doc stuff on Linux FOR NOW!!!!")
         except Exception:

@@ -25,8 +25,6 @@ for t in [5.0, 15.0, 25.0]:
         """
 
     def run(self, install_root: str, kwargs: dict):
-        if platform.system() != 'Linux':
-            print("SKIPPING PYTHON API TEST")
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         handle, python_file_path = mkstemp(suffix='.py')
         with os.fdopen(handle, 'w') as f:
