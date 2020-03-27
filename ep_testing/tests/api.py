@@ -1,7 +1,7 @@
 import os
-import stat
+import platform
 from tempfile import mkstemp
-from subprocess import check_call, CalledProcessError  # , STDOUT
+from subprocess import check_call, check_output, CalledProcessError  # , STDOUT
 
 from ep_testing.exceptions import EPTestingException
 from ep_testing.tests.base import BaseTest
@@ -29,12 +29,18 @@ for t in [5.0, 15.0, 25.0]:
         handle, python_file_path = mkstemp(suffix='.py')
         with os.fdopen(handle, 'w') as f:
             f.write(self._api_script_content())
-        st = os.stat(python_file_path)
-        os.chmod(python_file_path, st.st_mode | stat.S_IEXEC)
         print(' [FILE WRITTEN] ', end='')
         # dev_null = open(os.devnull, 'w')
         try:
-            check_call([python_file_path], env={'PYTHONPATH': install_root})  # , stdout=dev_null, stderr=STDOUT)
+            if platform.system() == 'Linux':
+                py = 'python3'
+            elif platform.system() == 'Darwin':
+                py = 'python3'
+                print(check_output(['which', 'python3']))
+            else:  # windows
+                py = '/c/Python36/python'
+                print(check_output(['which', 'python3']))
+            check_call([py, python_file_path], env={'PYTHONPATH': install_root})  # , stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('Python API Wrapper Script failed!')
