@@ -1,4 +1,5 @@
 import os
+import platform
 from tempfile import mkstemp
 from subprocess import check_call, CalledProcessError, STDOUT
 
@@ -30,7 +31,13 @@ for t in [5.0, 15.0, 25.0]:
         print(' [FILE WRITTEN] ', end='')
         dev_null = open(os.devnull, 'w')
         try:
-            check_call(['python3', python_file_path], stdout=dev_null, stderr=STDOUT, env={'PYTHONPATH': install_root})
+            if platform.system() == 'Linux':
+                py = 'python3'
+            elif platform.system() == 'Darwin':
+                py = 'python'
+            else:  # windows
+                py = '/C/Python36/python.exe'
+            check_call([py, python_file_path], stdout=dev_null, stderr=STDOUT, env={'PYTHONPATH': install_root})
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('Python API Wrapper Script failed!')
