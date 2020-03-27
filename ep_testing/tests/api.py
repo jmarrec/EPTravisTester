@@ -35,11 +35,10 @@ for t in [5.0, 15.0, 25.0]:
             if platform.system() == 'Linux':
                 py = 'python3'
             elif platform.system() == 'Darwin':
-                py = 'python3'
-                print(check_output(['which', 'python3']))
+                py = '/usr/local/bin/python3'
             else:  # windows
-                py = '/c/Python36/python'
-                print(check_output(['which', 'python3']))
+                py = '/c/Python36/python.exe'
+                print(check_output(['which', 'python.exe']))
             check_call([py, python_file_path], env={'PYTHONPATH': install_root})  # , stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:
