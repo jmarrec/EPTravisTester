@@ -1,49 +1,22 @@
 import os
-from subprocess import check_call, STDOUT, CalledProcessError
 
-from ep_testing.exceptions import EPTestingException
-
-
-class BaseTest:
-
-    def name(self):
-        raise NotImplementedError('name() must be overridden by derived classes')
-
-    def run(self, install_root: str, kwargs: dict):
-        raise NotImplementedError('run() must be overridden by derived classes')
-
-
-class TestPlainDDRunEPlusFile(BaseTest):
-
-    def name(self):
-        return 'Test running 1ZoneUncontrolled.idf and make sure it exits OK'
-
-    def run(self, install_root: str, kwargs: dict):
-        if 'testfile' not in kwargs:
-            raise EPTestingException('Bad call to TestPlainRunEPlusFile -- must pass testfile in kwargs')
-        test_file = kwargs['testfile']
-        print('* Running test class "%s" on file "%s"... ' % (self.__class__.__name__ , test_file), end='')
-        eplus_binary = os.path.join(install_root, 'energyplus')
-        idf_path = os.path.join(install_root, 'ExampleFiles', test_file)
-        dev_null = open(os.devnull, 'w')
-        try:
-            check_call([eplus_binary, '-D', idf_path], stdout=dev_null, stderr=STDOUT)
-            print(' [DONE]!')
-        except CalledProcessError:
-            raise EPTestingException('EnergyPlus failed!')
+from ep_testing.tests.idf_runner import TestPlainDDRunEPlusFile
+from ep_testing.tests.transition import TransitionOldFile
 
 
 class Tester:
 
-    def __init__(self, install_path: str):
+    def __init__(self, install_path: str, last_version_tag: str):
         self.install_path = install_path
+        self.last_version = last_version_tag
 
     def run(self):
         saved_path = os.getcwd()
         os.chdir(self.install_path)
         try:
-            TestPlainDDRunEPlusFile().run(self.install_path, {'testfile': '1ZoneUncontrolled.idf'})
-            TestPlainDDRunEPlusFile().run(self.install_path, {'testfile': 'PythonPluginCustomOutputVariable.idf'})
+            TestPlainDDRunEPlusFile().run(self.install_path, {'test_file': '1ZoneUncontrolled.idf'})
+            TestPlainDDRunEPlusFile().run(self.install_path, {'test_file': 'PythonPluginCustomOutputVariable.idf'})
+            TransitionOldFile().run(self.install_path, {'last_version': self.last_version})
         except Exception:
             raise
         finally:

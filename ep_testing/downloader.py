@@ -11,7 +11,7 @@ from ep_testing.exceptions import EPTestingException
 
 
 # If this is turned on, it expects to find an asset named target_file_name in the download_dir
-SKIP_DOWNLOAD = False
+SKIP_DOWNLOAD = True
 
 
 class Downloader:

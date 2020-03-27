@@ -6,7 +6,8 @@ from ep_testing.downloader import Downloader
 from ep_testing.tester import Tester
 
 
-TAG_NAME = 'v9.3.0-RC1'
+TAG_THIS_VERSION = 'v9.3.0-RC1'
+TAG_LAST_VERSION = 'v9.2.0'
 
 
 class Runner(distutils.cmd.Command):
@@ -23,10 +24,10 @@ class Runner(distutils.cmd.Command):
 
     def run(self):
         """Run command."""
-        self.announce('Attempting to test tag name: %s' % TAG_NAME, level=distutils.log.INFO)
-        d = Downloader(TAG_NAME, mkdtemp(), self.announce)
+        self.announce('Attempting to test tag name: %s' % TAG_THIS_VERSION, level=distutils.log.INFO)
+        d = Downloader(TAG_THIS_VERSION, mkdtemp(), self.announce)
         self.announce('EnergyPlus package extracted to: ' + d.extracted_install_path(), level=distutils.log.INFO)
-        t = Tester(d.extracted_install_path())
+        t = Tester(d.extracted_install_path(), TAG_LAST_VERSION)
         # unhandled exceptions should cause this to fail
         t.run()
 
