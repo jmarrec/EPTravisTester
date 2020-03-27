@@ -25,6 +25,8 @@ for t in [5.0, 15.0, 25.0]:
         """
 
     def run(self, install_root: str, kwargs: dict):
+        if platform.system() != 'Linux':
+            print("SKIPPING PYTHON API TEST")
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         handle, python_file_path = mkstemp(suffix='.py')
         with os.fdopen(handle, 'w') as f:
@@ -49,6 +51,16 @@ class TestCAPIAccess(BaseTest):
 
     def name(self):
         return 'Test running an API script against energyplus in C'
+
+    @staticmethod
+    def _api_cmakelists_content(install_path: str) -> str:
+        return """
+cmake_minimum_required(VERSION 3.10)
+project(TestCAPIAccess)
+include_directories("{EPLUS_INSTALL_NO_SLASH}/include")
+add_executable(TestCAPIAccess func.c)
+target_link_libraries(TestCAPIAccess "{EPLUS_INSTALL_NO_SLASH}/libenergyplusapi.so")
+        """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path)
 
     @staticmethod
     def _api_script_content() -> str:
@@ -76,21 +88,28 @@ int main() {
         c_file_path = os.path.join(build_dir, c_file_name)
         with open(c_file_path, 'w') as f:
             f.write(self._api_script_content())
-        print(' [FILE WRITTEN] ', end='')
+        print(' [SRC FILE WRITTEN] ', end='')
+        cmake_lists_path = os.path.join(build_dir, 'CMakeLists.txt')
+        with open(cmake_lists_path, 'w') as f:
+            f.write(self._api_cmakelists_content(install_root))
+        print(' [CMAKE FILE WRITTEN] ', end='')
         dev_null = open(os.devnull, 'w')
         saved_dir = os.getcwd()
         os.chdir(build_dir)
         try:
-            if platform.system() == 'Linux':
+            if platform.system() == 'Linux' or platform.system() == 'Darwin':
+                cmake_build_dir = os.path.join(build_dir, 'build')
+                os.makedirs(cmake_build_dir)
+                os.chdir(cmake_build_dir)
                 command_line = [
-                    'gcc',  # -------------------------------------------- Compiler binary
-                    '-I%s' % os.path.join(install_root, 'include'),  # --- Include path for header files
-                    '-Wl,-rpath,%s' % install_root,  # ------------------- Shared object path, passed to linker
-                    c_file_name,  # -------------------------------------- C source file to compile
-                    os.path.join(install_root, 'libenergyplusapi.so')  # - Shared object file to link
+                    'cmake',
+                    '..'
                 ]
-            elif platform.system() == 'Darwin':
-                command_line = []
+                check_call(command_line, stdout=dev_null, stderr=STDOUT)
+                command_line = [
+                    'make',
+                    '-j2'
+                ]
             else:  # windows
                 command_line = []
             check_call(command_line, stdout=dev_null, stderr=STDOUT)
@@ -98,10 +117,8 @@ int main() {
         except CalledProcessError:
             raise EPTestingException('C API Wrapper Compilation failed!')
         try:
-            if platform.system() == 'Linux':
-                command_line = ['./a.out']
-            elif platform.system() == 'Darwin':
-                command_line = []
+            if platform.system() == 'Linux' or platform.system() == 'Darwin':
+                command_line = ['./build/TestCAPIAccess']
             else:  # windows
                 command_line = []
             check_call(command_line, stdout=dev_null, stderr=STDOUT)
