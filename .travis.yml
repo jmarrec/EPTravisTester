@@ -8,6 +8,8 @@ jobs:
     python: 3.6
     addons:
       apt:
+        sources:
+          - sourceline: 'ppa:malteworld/ppa'
         update: true
         packages:
           - pdftk
