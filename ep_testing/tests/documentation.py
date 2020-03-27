@@ -1,5 +1,4 @@
 import os
-from platform import system
 from subprocess import check_call, CalledProcessError, STDOUT
 
 from ep_testing.exceptions import EPTestingException
@@ -19,9 +18,6 @@ class TestVersionInfoInDocumentation(BaseTest):
         pdf_file = kwargs['pdf_file']
         version_string = kwargs['version_string']
         print('* Running test class "%s" on file "%s"... ' % (self.__class__.__name__, pdf_file), end='')
-        if system() != 'Linux':
-            print(' [Not Linux -- SKIPPED]')
-            return
         documentation_dir = os.path.join(install_root, 'Documentation')
         saved_dir = os.getcwd()
         os.chdir(documentation_dir)
