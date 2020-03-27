@@ -13,7 +13,7 @@ class TestExpandObjectsAndRun(BaseTest):
 
     def run(self, install_root: str, kwargs: dict):
         if 'test_file' not in kwargs:
-            raise EPTestingException('Bad call to TestPlainRunEPlusFile -- must pass test_file in kwargs')
+            raise EPTestingException('Bad call to %s -- must pass test_file in kwargs' % self.__class__.__name__)
         test_file = kwargs['test_file']
         print('* Running test class "%s" on file "%s"... ' % (self.__class__.__name__, test_file), end='')
         original_idf_path = os.path.join(install_root, 'ExampleFiles', test_file)

@@ -13,7 +13,7 @@ class TransitionOldFile(BaseTest):
 
     def run(self, install_root: str, kwargs: dict):
         if 'last_version' not in kwargs:
-            raise EPTestingException('Bad call to TransitionOldFile -- must pass last_version in kwargs')
+            raise EPTestingException('Bad call to %s -- must pass last_version in kwargs' % self.__class__.__name__)
         last_version = kwargs['last_version']
         test_file = kwargs.get('test_file', '1ZoneUncontrolled.idf')
         print('* Running test class "%s" on file "%s"... ' % (self.__class__.__name__, test_file), end='')
