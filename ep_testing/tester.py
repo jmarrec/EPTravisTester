@@ -1,6 +1,7 @@
 import os
 
 from ep_testing.config import TestConfiguration
+from ep_testing.tests.api import TestPythonAPIAccess
 from ep_testing.tests.documentation import TestVersionInfoInDocumentation
 from ep_testing.tests.energyplus import TestPlainDDRunEPlusFile
 from ep_testing.tests.expand_objects import TestExpandObjectsAndRun
@@ -31,6 +32,9 @@ class Tester:
             )
             TestVersionInfoInDocumentation().run(
                 self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.THIS_VERSION}
+            )
+            TestPythonAPIAccess().run(
+                self.install_path, {}
             )
         except Exception:
             raise
