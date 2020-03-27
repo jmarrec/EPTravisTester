@@ -11,10 +11,6 @@ from ep_testing.exceptions import EPTestingException
 from ep_testing.config import TestConfiguration
 
 
-# If this is turned on, it expects to find an asset named target_file_name in the download_dir
-SKIP_DOWNLOAD = False
-
-
 class Downloader:
     Release_url = 'https://api.github.com/repos/NREL/EnergyPlus/releases'
     User_url = 'https://api.github.com/user'
@@ -51,11 +47,14 @@ class Downloader:
             self.extract_command = ['7z.exe', 'x', target_file_name, '-o' + self.extract_path]
         else:
             raise EPTestingException('Unknown platform -- ' + this_platform)
-        self.download_path = os.path.join(download_dir, target_file_name)
         releases = self._get_all_packages()
         matching_release = self._find_matching_release(releases)
         asset = self._find_matching_asset_for_release(matching_release)
-        if not SKIP_DOWNLOAD:
+        self.download_path = os.path.join(download_dir, target_file_name)
+        if config.SKIP_DOWNLOAD:
+            if not os.path.exists(self.download_path):
+                raise EPTestingException('Download skipped, but package not available at ' + self.download_path)
+        else:
             self._download_asset(asset)
         self._extracted_install_path = self._extract_asset()
 
