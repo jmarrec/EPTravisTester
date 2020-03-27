@@ -12,7 +12,7 @@ from ep_testing.config import TestConfiguration
 
 
 # If this is turned on, it expects to find an asset named target_file_name in the download_dir
-SKIP_DOWNLOAD = True
+SKIP_DOWNLOAD = False
 
 
 class Downloader:
