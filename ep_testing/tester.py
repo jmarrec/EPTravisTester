@@ -1,7 +1,8 @@
 import os
 
 from ep_testing.config import TestConfiguration
-from ep_testing.tests.idf_runner import TestPlainDDRunEPlusFile
+from ep_testing.tests.energyplus import TestPlainDDRunEPlusFile
+from ep_testing.tests.expand_objects import TestExpandObjectsAndRun
 from ep_testing.tests.transition import TransitionOldFile
 
 
@@ -17,6 +18,7 @@ class Tester:
         try:
             TestPlainDDRunEPlusFile().run(self.install_path, {'test_file': '1ZoneUncontrolled.idf'})
             TestPlainDDRunEPlusFile().run(self.install_path, {'test_file': 'PythonPluginCustomOutputVariable.idf'})
+            TestExpandObjectsAndRun().run(self.install_path, {'test_file': 'HVACTemplate-5ZoneFanCoil.idf'})
             TransitionOldFile().run(self.install_path, {'last_version': self.last_version})
         except Exception:
             raise
