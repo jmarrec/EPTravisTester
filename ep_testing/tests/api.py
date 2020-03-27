@@ -96,9 +96,9 @@ int main() {
         dev_null = open(os.devnull, 'w')
         saved_dir = os.getcwd()
         os.chdir(build_dir)
+        cmake_build_dir = os.path.join(build_dir, 'build')
         try:
             if platform.system() == 'Linux' or platform.system() == 'Darwin':
-                cmake_build_dir = os.path.join(build_dir, 'build')
                 os.makedirs(cmake_build_dir)
                 os.chdir(cmake_build_dir)
                 command_line = [
@@ -118,7 +118,7 @@ int main() {
             raise EPTestingException('C API Wrapper Compilation failed!')
         try:
             if platform.system() == 'Linux' or platform.system() == 'Darwin':
-                command_line = ['./build/TestCAPIAccess']
+                command_line = [os.path.join(cmake_build_dir, 'TestCAPIAccess')]
             else:  # windows
                 command_line = []
             check_call(command_line, stdout=dev_null, stderr=STDOUT)

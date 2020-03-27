@@ -31,7 +31,7 @@ class Tester:
             TransitionOldFile().run(
                 self.install_path, {'last_version': self.config.TAG_LAST_VERSION}
             )
-            if system() == 'Linux':
+            if system() == 'Linux' or system() == 'Darwin':
                 TestVersionInfoInDocumentation().run(
                     self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.THIS_VERSION}
                 )
