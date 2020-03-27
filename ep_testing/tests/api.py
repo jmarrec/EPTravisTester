@@ -37,7 +37,7 @@ for t in [5.0, 15.0, 25.0]:
                 py = 'python'
             else:  # windows
                 py = '/C/Python36/python.exe'
-            check_call([py, python_file_path], stdout=dev_null, stderr=STDOUT, env={'PYTHONPATH': install_root})
+            check_call([py, python_file_path], env={'PYTHONPATH': install_root})  #, stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('Python API Wrapper Script failed!')
