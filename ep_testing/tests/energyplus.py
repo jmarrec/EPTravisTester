@@ -1,5 +1,5 @@
 import os
-from subprocess import check_call, CalledProcessError, STDOUT
+from subprocess import check_call, CalledProcessError  # , STDOUT
 
 from ep_testing.exceptions import EPTestingException
 from ep_testing.tests.base import BaseTest
@@ -17,7 +17,7 @@ class TestPlainDDRunEPlusFile(BaseTest):
         print('* Running test class "%s" on file "%s"... ' % (self.__class__.__name__, test_file), end='')
         eplus_binary = os.path.join(install_root, 'energyplus')
         idf_path = os.path.join(install_root, 'ExampleFiles', test_file)
-        dev_null = open(os.devnull, 'w')
+        # dev_null = open(os.devnull, 'w')
         try:
             check_call([eplus_binary, '-D', idf_path])  # , stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
