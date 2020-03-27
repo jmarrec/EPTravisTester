@@ -8,6 +8,7 @@ from subprocess import check_call, CalledProcessError
 import urllib.request
 
 from ep_testing.exceptions import EPTestingException
+from ep_testing.config import TestConfiguration
 
 
 # If this is turned on, it expects to find an asset named target_file_name in the download_dir
@@ -18,8 +19,8 @@ class Downloader:
     Release_url = 'https://api.github.com/repos/NREL/EnergyPlus/releases'
     User_url = 'https://api.github.com/user'
 
-    def __init__(self, release_tag_name: str, download_dir: str, announce: callable = None):
-        self.release_tag = release_tag_name
+    def __init__(self, config: TestConfiguration, download_dir: str, announce: callable = None):
+        self.release_tag = config.TAG_THIS_VERSION
         self.download_dir = download_dir
         self.announce = announce  # hijacking this instance method is mildly dangerous, like 1/5 danger stars
         github_token = os.environ.get('GITHUB_TOKEN', None)

@@ -4,10 +4,7 @@ from setuptools import setup
 from tempfile import mkdtemp
 from ep_testing.downloader import Downloader
 from ep_testing.tester import Tester
-
-
-TAG_THIS_VERSION = 'v9.3.0-RC1'
-TAG_LAST_VERSION = 'v9.2.0'
+from ep_testing.config import TestConfiguration
 
 
 class Runner(distutils.cmd.Command):
@@ -24,10 +21,11 @@ class Runner(distutils.cmd.Command):
 
     def run(self):
         """Run command."""
-        self.announce('Attempting to test tag name: %s' % TAG_THIS_VERSION, level=distutils.log.INFO)
-        d = Downloader(TAG_THIS_VERSION, mkdtemp(), self.announce)
+        c = TestConfiguration()
+        self.announce('Attempting to test tag name: %s' % TestConfiguration.TAG_THIS_VERSION, level=distutils.log.INFO)
+        d = Downloader(c, mkdtemp(), self.announce)
         self.announce('EnergyPlus package extracted to: ' + d.extracted_install_path(), level=distutils.log.INFO)
-        t = Tester(d.extracted_install_path(), TAG_LAST_VERSION)
+        t = Tester(c, d.extracted_install_path())
         # unhandled exceptions should cause this to fail
         t.run()
 
@@ -45,5 +43,3 @@ setup(
         'run': Runner,
     },
 )
-
-
