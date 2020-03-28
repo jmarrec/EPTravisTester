@@ -124,10 +124,11 @@ int main() {
             ]
             if platform.system() == 'Windows':
                 command_line.extend(['--config', 'Release'])
-            check_call(command_line, stdout=dev_null, stderr=STDOUT)
+            check_call(command_line)  # , stdout=dev_null, stderr=STDOUT)
             print(' [COMPILED] ', end='')
         except CalledProcessError:
-            raise EPTestingException('C API Wrapper Compilation failed!')
+            print("C API Wrapper Compilation Failed!")
+            raise
         # here is where it is limited -- we have to run from the e+ install dir
         try:
             built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
@@ -141,5 +142,6 @@ int main() {
             check_call(command_line, stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:
-            raise EPTestingException('C API Wrapper Execution failed!')
+            print('C API Wrapper Execution failed!')
+            raise
         os.chdir(saved_dir)
