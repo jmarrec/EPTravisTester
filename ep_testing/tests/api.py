@@ -46,6 +46,7 @@ for t in [5.0, 15.0, 25.0]:
 
 
 class TestCAPIAccess(BaseTest):
+    Verbose = True
 
     def name(self):
         return 'Test running an API script against energyplus in C'
@@ -115,16 +116,23 @@ int main() {
             ]
             if platform.system() == 'Windows':
                 command_line.extend(['-G', 'Visual Studio 15 Win64'])
-            check_call(command_line, stdout=dev_null, stderr=STDOUT, env=my_env)
+            if self.Verbose:
+                check_call(command_line, env=my_env)
+            else:
+                check_call(command_line, stdout=dev_null, stderr=STDOUT, env=my_env)
             command_line = [
                 'cmake',
                 '--build',
                 '.',
-                '-j2'
+                '-j',
+                '2'
             ]
             if platform.system() == 'Windows':
                 command_line.extend(['--config', 'Release'])
-            check_call(command_line)  # , stdout=dev_null, stderr=STDOUT)
+            if self.Verbose:
+                check_call(command_line)
+            else:
+                check_call(command_line, stdout=dev_null, stderr=STDOUT)
             print(' [COMPILED] ', end='')
         except CalledProcessError:
             print("C API Wrapper Compilation Failed!")
@@ -136,10 +144,16 @@ int main() {
             if platform.system() == 'Windows':
                 built_binary_path += '.exe'
                 target_binary_path += '.exe'
-            check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
+            if self.Verbose:
+                check_call(['cp', built_binary_path, target_binary_path])
+            else:
+                check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
             command_line = [target_binary_path]
             os.chdir(install_root)
-            check_call(command_line, stdout=dev_null, stderr=STDOUT)
+            if self.Verbose:
+                check_call(command_line)
+            else:
+                check_call(command_line, stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:
             print('C API Wrapper Execution failed!')
