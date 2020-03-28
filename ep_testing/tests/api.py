@@ -104,37 +104,40 @@ int main() {
         os.chdir(build_dir)
         cmake_build_dir = os.path.join(build_dir, 'build')
         try:
-            if platform.system() == 'Linux' or platform.system() == 'Darwin':
-                os.makedirs(cmake_build_dir)
-                os.chdir(cmake_build_dir)
-                my_env = os.environ.copy()
-                if platform.system() == 'Darwin':  # my local comp didn't have cmake in path except in interact shells
-                    my_env["PATH"] = "/usr/local/bin:" + my_env["PATH"]
-                command_line = [
-                    'cmake',
-                    '..'
-                ]
-                check_call(command_line, stdout=dev_null, stderr=STDOUT, env=my_env)
-                command_line = [
-                    'make',
-                    '-j2'
-                ]
-            else:  # windows
-                command_line = []
+            os.makedirs(cmake_build_dir)
+            os.chdir(cmake_build_dir)
+            my_env = os.environ.copy()
+            if platform.system() == 'Darwin':  # my local comp didn't have cmake in path except in interact shells
+                my_env["PATH"] = "/usr/local/bin:" + my_env["PATH"]
+            command_line = [
+                'cmake',
+                '..'
+            ]
+            if platform.system() == 'Windows':
+                command_line.extend(['-G', 'Visual Studio 15 Win64'])
+            check_call(command_line, stdout=dev_null, stderr=STDOUT, env=my_env)
+            command_line = [
+                'cmake',
+                '--build',
+                '.',
+                '-j2'
+            ]
+            if platform.system() == 'Windows':
+                command_line.extend(['--config', 'Release'])
             check_call(command_line, stdout=dev_null, stderr=STDOUT)
             print(' [COMPILED] ', end='')
         except CalledProcessError:
             raise EPTestingException('C API Wrapper Compilation failed!')
         # here is where it is limited -- we have to run from the e+ install dir
         try:
-            if platform.system() == 'Linux' or platform.system() == 'Darwin':
-                built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
-                target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
-                check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
-                command_line = [target_binary_path]
-                os.chdir(install_root)
-            else:  # windows
-                command_line = []
+            built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
+            target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
+            if platform.system() == 'Windows':
+                built_binary_path += '.exe'
+                target_binary_path += '.exe'
+            check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
+            command_line = [target_binary_path]
+            os.chdir(install_root)
             check_call(command_line, stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:

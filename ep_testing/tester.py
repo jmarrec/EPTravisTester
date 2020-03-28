@@ -31,12 +31,9 @@ class Tester:
             TransitionOldFile().run(
                 self.install_path, {'last_version': self.config.TAG_LAST_VERSION}
             )
-            if system() == 'Linux' or system() == 'Darwin':
-                TestCAPIAccess().run(
-                    self.install_path, {}
-                )
-            else:
-                print("Only running C API on Linux and Mac FOR NOW")
+            TestCAPIAccess().run(
+                self.install_path, {}
+            )
             if system() == 'Linux':
                 TestVersionInfoInDocumentation().run(
                     self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.THIS_VERSION}
