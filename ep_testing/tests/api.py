@@ -1,7 +1,7 @@
 import os
 import platform
 from tempfile import mkdtemp, mkstemp
-from subprocess import check_call, check_output, CalledProcessError, STDOUT
+from subprocess import check_call, CalledProcessError, STDOUT
 
 from ep_testing.exceptions import EPTestingException
 from ep_testing.tests.base import BaseTest
