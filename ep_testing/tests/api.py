@@ -38,10 +38,6 @@ for t in [5.0, 15.0, 25.0]:
                 py = '/usr/local/bin/python3'
             else:  # windows
                 py = 'C:\\Python36\\Python.exe'
-            if os.path.exists(py):
-                print("PYTHON EXISTS AT: " + py)
-            else:
-                print("PYTHON DOES NOT EXIST AT " + py)
             my_env = os.environ.copy()
             my_env['PYTHONPATH'] = install_root
             if platform.system() == 'Windows':
