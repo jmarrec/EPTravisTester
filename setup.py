@@ -22,12 +22,8 @@ class Runner(distutils.cmd.Command):
     def run(self):
         """Run command."""
         c = TestConfiguration()
-        self.announce('Attempting to test tag name: %s' % TestConfiguration.TAG_THIS_VERSION, level=distutils.log.INFO)
-        if c.SKIP_DOWNLOAD:
-            download_dir = c.SKIPPED_DOWNLOAD_DIR
-        else:
-            download_dir = mkdtemp()
-        d = Downloader(c, download_dir, self.announce)
+        self.announce('Attempting to test tag name: %s' % c.tag_this_version, level=distutils.log.INFO)
+        d = Downloader(c, self.announce)
         self.announce('EnergyPlus package extracted to: ' + d.extracted_install_path(), level=distutils.log.INFO)
         t = Tester(c, d.extracted_install_path())
         # unhandled exceptions should cause this to fail

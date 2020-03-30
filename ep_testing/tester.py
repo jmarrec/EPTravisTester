@@ -29,7 +29,7 @@ class Tester:
                 self.install_path, {'test_file': 'HVACTemplate-5ZoneFanCoil.idf'}
             )
             TransitionOldFile().run(
-                self.install_path, {'last_version': self.config.TAG_LAST_VERSION}
+                self.install_path, {'last_version': self.config.tag_last_version}
             )
             # to use the DLL at link-time, Windows requires the lib file, so just build this on Mac/Linux
             if system() == 'Linux' or system() == 'Darwin':  # windows needs lib or def
@@ -44,7 +44,7 @@ class Tester:
             )
             if system() == 'Linux':
                 TestVersionInfoInDocumentation().run(
-                    self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.THIS_VERSION}
+                    self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.this_version}
                 )
                 TestPythonAPIAccess().run(
                     self.install_path, {}
