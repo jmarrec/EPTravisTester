@@ -15,9 +15,9 @@ class Downloader:
     Release_url = 'https://api.github.com/repos/NREL/EnergyPlus/releases'
     User_url = 'https://api.github.com/user'
 
-    def __init__(self, config: TestConfiguration, download_dir: str, announce: callable = None):
-        self.release_tag = config.TAG_THIS_VERSION
-        self.download_dir = download_dir
+    def __init__(self, config: TestConfiguration, announce: callable = None):
+        self.release_tag = config.tag_this_version
+        self.download_dir = config.download_dir
         self.announce = announce  # hijacking this instance method is mildly dangerous, like 1/5 danger stars
         github_token = os.environ.get('GITHUB_TOKEN', None)
         if github_token is None:
@@ -29,7 +29,7 @@ class Downloader:
         self._my_print('Executing download operations as Github user: ' + user_response.json()['login'])
         this_platform = platform.system()
         extract_dir_name = 'ep_package'
-        self.extract_path = os.path.join(download_dir, extract_dir_name)
+        self.extract_path = os.path.join(config.download_dir, extract_dir_name)
         if this_platform == 'Linux':
             self.asset_pattern = 'Linux-x86_64.tar.gz'
             target_file_name = 'ep.tar.gz'
@@ -50,8 +50,8 @@ class Downloader:
         releases = self._get_all_packages()
         matching_release = self._find_matching_release(releases)
         asset = self._find_matching_asset_for_release(matching_release)
-        self.download_path = os.path.join(download_dir, target_file_name)
-        if config.SKIP_DOWNLOAD:
+        self.download_path = os.path.join(config.download_dir, target_file_name)
+        if config.skip_download:
             if not os.path.exists(self.download_path):
                 raise EPTestingException('Download skipped, but package not available at ' + self.download_path)
         else:
