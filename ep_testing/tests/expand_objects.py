@@ -11,7 +11,7 @@ class TestExpandObjectsAndRun(BaseTest):
     def name(self):
         return 'Test running ExpandObjects on a template file and make sure it exits OK'
 
-    def run(self, install_root: str, kwargs: dict):
+    def run(self, install_root: str, verbose: bool, kwargs: dict):
         if 'test_file' not in kwargs:
             raise EPTestingException('Bad call to %s -- must pass test_file in kwargs' % self.__class__.__name__)
         test_file = kwargs['test_file']
