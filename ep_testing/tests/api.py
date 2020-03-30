@@ -1,14 +1,13 @@
 import os
 import platform
 from tempfile import mkdtemp, mkstemp
-from subprocess import check_call, check_output, CalledProcessError, STDOUT
+from subprocess import check_call, CalledProcessError, STDOUT
 
 from ep_testing.exceptions import EPTestingException
 from ep_testing.tests.base import BaseTest
 
 
 class TestPythonAPIAccess(BaseTest):
-
     def name(self):
         return 'Test running an API script against pyenergyplus'
 
@@ -24,22 +23,29 @@ for t in [5.0, 15.0, 25.0]:
     rho = glycol.density(t)
         """
 
-    def run(self, install_root: str, kwargs: dict):
+    def run(self, install_root: str, verbose: bool, kwargs: dict):
+        self.verbose = verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         handle, python_file_path = mkstemp(suffix='.py')
         with os.fdopen(handle, 'w') as f:
             f.write(self._api_script_content())
         print(' [FILE WRITTEN] ', end='')
-        # dev_null = open(os.devnull, 'w')
+        dev_null = open(os.devnull, 'w')
         try:
             if platform.system() == 'Linux':
                 py = 'python3'
             elif platform.system() == 'Darwin':
                 py = '/usr/local/bin/python3'
             else:  # windows
-                py = '/c/Python36/python.exe'
-                print(check_output(['which', 'python.exe']))
-            check_call([py, python_file_path], env={'PYTHONPATH': install_root})  # , stdout=dev_null, stderr=STDOUT)
+                py = 'C:\\Python36\\Python.exe'
+            my_env = os.environ.copy()
+            my_env['PYTHONPATH'] = install_root
+            if platform.system() == 'Windows':
+                my_env['PATH'] = install_root + ';' + my_env['PATH']
+            if self.verbose:
+                check_call([py, python_file_path], env=my_env)
+            else:
+                check_call([py, python_file_path], env=my_env, stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('Python API Wrapper Script failed!')
@@ -80,9 +86,9 @@ def make_build_dir_and_build(cmake_build_dir: str, verbose: bool):
 
 
 class TestCAPIAccess(BaseTest):
-    Verbose = False
 
     def __init__(self):
+        super().__init__()
         self.source_file_name = 'func.c'
         self.target_name = 'TestCAPIAccess'
 
@@ -127,7 +133,8 @@ int main() {
 }
         """
 
-    def run(self, install_root: str, kwargs: dict):
+    def run(self, install_root: str, verbose: bool, kwargs: dict):
+        self.verbose = verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         build_dir = mkdtemp()
         # print("Build dir set as: " + build_dir)
@@ -142,13 +149,13 @@ int main() {
         print(' [CMAKE FILE WRITTEN] ', end='')
         dev_null = open(os.devnull, 'w')
         cmake_build_dir = os.path.join(build_dir, 'build')
-        make_build_dir_and_build(cmake_build_dir, self.Verbose)
+        make_build_dir_and_build(cmake_build_dir, self.verbose)
         try:
             if platform.system() == 'Linux':
                 # for Linux, we don't have to do anything, just run it
                 new_binary_path = os.path.join(cmake_build_dir, self.target_name)
                 command_line = [new_binary_path]
-                if self.Verbose:
+                if self.verbose:
                     check_call(command_line, cwd=install_root)
                 else:
                     check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
@@ -160,12 +167,12 @@ int main() {
                 #    demonstrate that here.
                 built_binary_path = os.path.join(cmake_build_dir, self.target_name)
                 new_binary_path = os.path.join(install_root, self.target_name)
-                if self.Verbose:
+                if self.verbose:
                     check_call(['cp', built_binary_path, new_binary_path])
                 else:
                     check_call(['cp', built_binary_path, new_binary_path], stdout=dev_null, stderr=STDOUT)
                     command_line = [new_binary_path]
-                    if self.Verbose:
+                    if self.verbose:
                         check_call(command_line, cwd=install_root)
                     else:
                         check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
@@ -176,9 +183,9 @@ int main() {
 
 
 class TestCppAPIDelayedAccess(BaseTest):
-    Verbose = False
 
     def __init__(self):
+        super().__init__()
         self.source_file_name = 'func.cpp'
         self.target_name = 'TestCAPIAccess'
 
@@ -257,7 +264,8 @@ int main() {
 }
         """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
 
-    def run(self, install_root: str, kwargs: dict):
+    def run(self, install_root: str, verbose: bool, kwargs: dict):
+        self.verbose = verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         build_dir = mkdtemp()
         # print("Build dir set as: " + build_dir)
@@ -275,7 +283,7 @@ int main() {
         print(' [CMAKE FILE WRITTEN] ', end='')
         dev_null = open(os.devnull, 'w')
         cmake_build_dir = os.path.join(build_dir, 'build')
-        make_build_dir_and_build(cmake_build_dir, self.Verbose)
+        make_build_dir_and_build(cmake_build_dir, self.verbose)
         if platform.system() == 'Windows':
             # things get weird when running the program, clients need to understand DLL search paths on their platform
             # for Windows, the safe (default?) search path is:
@@ -294,7 +302,7 @@ int main() {
             target_binary_path = os.path.join(install_root, 'TestCAPIAccess.exe')
             command_line = [target_binary_path]
             try:
-                if self.Verbose:
+                if self.verbose:
                     check_call(['cp', built_binary_path, target_binary_path])
                     check_call(command_line)
                 else:
@@ -308,7 +316,7 @@ int main() {
             # B: Change the working dir and run from ep install dir
             command_line = [built_binary_path]
             try:
-                if self.Verbose:
+                if self.verbose:
                     check_call(command_line, cwd=install_root)
                 else:
                     check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
@@ -321,7 +329,7 @@ int main() {
             try:
                 my_env = os.environ.copy()
                 my_env["PATH"] = install_root + ';' + my_env["PATH"]
-                if self.Verbose:
+                if self.verbose:
                     check_call(command_line, env=my_env)
                 else:
                     check_call(command_line, env=my_env, stdout=dev_null, stderr=STDOUT)
@@ -345,7 +353,7 @@ int main() {
             built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
             command_line = [built_binary_path]
             try:
-                if self.Verbose:
+                if self.verbose:
                     check_call(['cp', python_lib_path, target_lib_path])
                     check_call(command_line)
                 else:
@@ -361,7 +369,7 @@ int main() {
             target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
             command_line = [target_binary_path]
             try:
-                if self.Verbose:
+                if self.verbose:
                     check_call(['cp', built_binary_path, target_binary_path])
                     check_call(command_line)
                 else:
@@ -384,7 +392,7 @@ int main() {
             built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
             command_line = [built_binary_path]
             try:
-                if self.Verbose:
+                if self.verbose:
                     check_call(command_line)
                 else:
                     check_call(command_line, stdout=dev_null, stderr=STDOUT)

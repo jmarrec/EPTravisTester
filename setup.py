@@ -19,12 +19,12 @@ class Runner(distutils.cmd.Command):
         pass
 
     def run(self):
-        """Run command."""
+        verbose = False
         c = TestConfiguration()
         self.announce('Attempting to test tag name: %s' % c.tag_this_version, level=distutils.log.INFO)
         d = Downloader(c, self.announce)
         self.announce('EnergyPlus package extracted to: ' + d.extracted_install_path(), level=distutils.log.INFO)
-        t = Tester(c, d.extracted_install_path())
+        t = Tester(c, d.extracted_install_path(), verbose)
         # unhandled exceptions should cause this to fail
         t.run()
 

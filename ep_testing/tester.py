@@ -11,46 +11,56 @@ from ep_testing.tests.transition import TransitionOldFile
 
 class Tester:
 
-    def __init__(self, config: TestConfiguration, install_path: str):
+    def __init__(self, config: TestConfiguration, install_path: str, verbose: bool):
         self.install_path = install_path
         self.config = config
+        self.verbose = verbose
 
     def run(self):
         saved_path = os.getcwd()
         os.chdir(self.install_path)
         try:
             TestPlainDDRunEPlusFile().run(
-                self.install_path, {'test_file': '1ZoneUncontrolled.idf'}
+                self.install_path, self.verbose, {'test_file': '1ZoneUncontrolled.idf'}
             )
             TestPlainDDRunEPlusFile().run(
-                self.install_path, {'test_file': 'PythonPluginCustomOutputVariable.idf'}
+                self.install_path, self.verbose, {'test_file': 'PythonPluginCustomOutputVariable.idf'}
             )
             TestExpandObjectsAndRun().run(
-                self.install_path, {'test_file': 'HVACTemplate-5ZoneFanCoil.idf'}
+                self.install_path, self.verbose, {'test_file': 'HVACTemplate-5ZoneFanCoil.idf'}
             )
             TransitionOldFile().run(
-                self.install_path, {'last_version': self.config.tag_last_version}
+                self.install_path, self.verbose, {'last_version': self.config.tag_last_version}
             )
             # to use the DLL at link-time, Windows requires the lib file, so just build this on Mac/Linux
             if system() == 'Linux' or system() == 'Darwin':  # windows needs lib or def
                 TestCAPIAccess().run(
-                    self.install_path, {}
+                    self.install_path, self.verbose, {}
                 )
             else:
-                print("Building against the DLL at link time on Linux/Mac ONLY until we get a .lib file")
+                if self.verbose:
+                    print("Building against the DLL at link time on Linux/Mac ONLY until we get a .lib file")
             # however, linking at run-time works just fine on all three platforms
             TestCppAPIDelayedAccess().run(
-                self.install_path, {}
+                self.install_path, self.verbose, {}
             )
-            if system() == 'Linux':
-                TestVersionInfoInDocumentation().run(
-                    self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.this_version}
-                )
+            # Python may have trouble on Mac for right now, but should be able to work on Windows and Linux
+            if system() == 'Linux' or system() == 'Windows':
                 TestPythonAPIAccess().run(
-                    self.install_path, {}
+                    self.install_path, self.verbose, {}
                 )
             else:
-                print("Running Python API and Doc stuff on Linux ONLY FOR NOW!!!!")
+                if self.verbose:
+                    print("Running Python API Linux and Windows ONLY until we get the @executable_path resolved on Mac")
+            # Documentation builds will be on all the platforms once I get pdftk and pdftotext or equivalent installed
+            if system() == 'Linux':
+                TestVersionInfoInDocumentation().run(
+                    self.install_path, self.verbose,
+                    {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.this_version}
+                )
+            else:
+                if self.verbose:
+                    print("Doing documentation tests on Linux ONLY until we get pdftk and pdftotext or equiv installed")
         except Exception:
             raise
         finally:

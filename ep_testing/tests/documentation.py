@@ -10,7 +10,7 @@ class TestVersionInfoInDocumentation(BaseTest):
     def name(self):
         return 'Verify contents in a PDF'
 
-    def run(self, install_root: str, kwargs: dict):
+    def run(self, install_root: str, verbose: bool, kwargs: dict):
         if 'pdf_file' not in kwargs:
             raise EPTestingException('Bad call to %s -- must pass pdf_file in kwargs' % self.__class__.__name__)
         if 'version_string' not in kwargs:
