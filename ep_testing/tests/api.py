@@ -143,23 +143,58 @@ int main() {
         dev_null = open(os.devnull, 'w')
         cmake_build_dir = os.path.join(build_dir, 'build')
         make_build_dir_and_build(cmake_build_dir, self.Verbose)
-        # here is where it is limited -- we have to run from the e+ install dir
+        # so on Linux, I think this will work just fine as-is, but on Mac, we need to copy the binary and run
+        # it from the e+ install.  This is because the E+ API DLL will be trying to load up the Python DLL as soon as
+        # it runs, and
+        new_binary_path = ''
         try:
-            built_binary_path = os.path.join(cmake_build_dir, self.target_name)
-            target_binary_path = os.path.join(install_root, self.target_name)
-            if self.Verbose:
-                check_call(['cp', built_binary_path, target_binary_path])
-            else:
-                check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
-            command_line = [target_binary_path]
-            if self.Verbose:
-                check_call(command_line, cwd=install_root)
-            else:
-                check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
-            print(' [DONE]!')
+            if platform.system() == 'Linux':
+                # for Linux, we don't have to do anything, just run it
+                new_binary_path = os.path.join(cmake_build_dir, self.target_name)
+                command_line = [new_binary_path]
+                if self.Verbose:
+                    check_call(command_line, cwd=install_root)
+                else:
+                    check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
+                print(' [DONE]!')
+            elif platform.system() == 'Darwin':
+                # for Mac, we can maybe do one of two things.
+                # A: We can copy the new binary into the E+ install and run from there, or
+                # B: We can copy the Python lib out to the build dir and run from there
+                # First try copying the binary into the install dir
+                built_binary_path = os.path.join(cmake_build_dir, self.target_name)
+                new_binary_path = os.path.join(install_root, self.target_name)
+                if self.Verbose:
+                    check_call(['cp', built_binary_path, new_binary_path])
+                else:
+                    check_call(['cp', built_binary_path, new_binary_path], stdout=dev_null, stderr=STDOUT)
+                    command_line = [new_binary_path]
+                    if self.Verbose:
+                        check_call(command_line, cwd=install_root)
+                    else:
+                        check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
+                    print(' [CASE_A_SUCCESS] ', end='')
+                os.remove(new_binary_path)
+                # Now try copying the Python lib out to the build dir and running from there
+                python_lib_path = os.path.join(install_root, 'Python')
+                target_lib_path = os.path.join(cmake_build_dir, 'Python')
+                command_line = [built_binary_path]
+                try:
+                    if self.Verbose:
+                        check_call(['cp', python_lib_path, target_lib_path])
+                        check_call(command_line)
+                    else:
+                        check_call(['cp', python_lib_path, target_lib_path], stdout=dev_null, stderr=STDOUT)
+                        check_call(command_line, stdout=dev_null, stderr=STDOUT)
+                    os.remove(target_lib_path)  # remove the copied lib so it is clean again
+                except CalledProcessError:
+                    print("C API Wrapper Case B execution failed")
+                    raise
+                print(' [CASE_B_SUCCESS] ', end='')
         except CalledProcessError:
             print('C API Wrapper Execution failed!')
             raise
+        print(' [DONE]!')
 
 
 class TestCppAPIDelayedAccess(BaseTest):
