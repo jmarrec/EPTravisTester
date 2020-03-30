@@ -8,7 +8,7 @@ from ep_testing.tests.base import BaseTest
 
 
 class TestPythonAPIAccess(BaseTest):
-    Verbose = False
+    Verbose = True
 
     def name(self):
         return 'Test running an API script against pyenergyplus'
@@ -39,9 +39,10 @@ for t in [5.0, 15.0, 25.0]:
                 py = '/usr/local/bin/python3'
             else:  # windows
                 py = '/c/Python36/python.exe'
-                print(check_output(['which', 'python.exe']))
             my_env = os.environ.copy()
             my_env['PYTHONPATH'] = install_root
+            if platform.system() == 'Windows':
+                my_env['PATH'] = install_root + ';' + my_env['PATH']
             if self.Verbose:
                 check_call([py, python_file_path], env=my_env)
             else:

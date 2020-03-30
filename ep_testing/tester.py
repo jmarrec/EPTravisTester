@@ -42,15 +42,20 @@ class Tester:
             TestCppAPIDelayedAccess().run(
                 self.install_path, {}
             )
-            if system() == 'Linux':
-                TestVersionInfoInDocumentation().run(
-                    self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.this_version}
-                )
+            # Python may have trouble on Mac for right now, but should be able to work on Windows and Linux
+            if system() == 'Linux' or system() == 'Windows':
                 TestPythonAPIAccess().run(
                     self.install_path, {}
                 )
             else:
-                print("Running Python API and Doc stuff on Linux ONLY FOR NOW!!!!")
+                print("Running Python API Linux and Windows ONLY until we get the @executable_path resolved on Mac")
+            # Documentation builds will be on all the platforms once I get pdftk and pdftotext or equivalent installed
+            if system() == 'Linux':
+                TestVersionInfoInDocumentation().run(
+                    self.install_path, {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.this_version}
+                )
+            else:
+                print("Doing documentation tests on Linux ONLY until we get pdftk and pdftotext or equiv installed")
         except Exception:
             raise
         finally:
