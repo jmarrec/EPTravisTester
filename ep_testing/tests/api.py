@@ -8,6 +8,7 @@ from ep_testing.tests.base import BaseTest
 
 
 class TestPythonAPIAccess(BaseTest):
+    Verbose = False
 
     def name(self):
         return 'Test running an API script against pyenergyplus'
@@ -30,7 +31,7 @@ for t in [5.0, 15.0, 25.0]:
         with os.fdopen(handle, 'w') as f:
             f.write(self._api_script_content())
         print(' [FILE WRITTEN] ', end='')
-        # dev_null = open(os.devnull, 'w')
+        dev_null = open(os.devnull, 'w')
         try:
             if platform.system() == 'Linux':
                 py = 'python3'
@@ -39,7 +40,12 @@ for t in [5.0, 15.0, 25.0]:
             else:  # windows
                 py = '/c/Python36/python.exe'
                 print(check_output(['which', 'python.exe']))
-            check_call([py, python_file_path], env={'PYTHONPATH': install_root})  # , stdout=dev_null, stderr=STDOUT)
+            my_env = os.environ.copy()
+            my_env['PYTHONPATH'] = install_root
+            if self.Verbose:
+                check_call([py, python_file_path], env=my_env)
+            else:
+                check_call([py, python_file_path], env=my_env, stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('Python API Wrapper Script failed!')
