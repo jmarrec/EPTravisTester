@@ -1,7 +1,6 @@
 import distutils.cmd
 import distutils.log
 from setuptools import setup
-from tempfile import mkdtemp
 from ep_testing.downloader import Downloader
 from ep_testing.tester import Tester
 from ep_testing.config import TestConfiguration
