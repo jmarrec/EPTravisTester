@@ -2,7 +2,7 @@ import os
 from platform import system
 
 from ep_testing.config import TestConfiguration
-from ep_testing.tests.api import TestPythonAPIAccess, TestCAPIAccess
+from ep_testing.tests.api import TestPythonAPIAccess, TestCAPIAccess, TestCAPIDelayedAccess
 from ep_testing.tests.documentation import TestVersionInfoInDocumentation
 from ep_testing.tests.energyplus import TestPlainDDRunEPlusFile
 from ep_testing.tests.expand_objects import TestExpandObjectsAndRun
@@ -31,7 +31,11 @@ class Tester:
             TransitionOldFile().run(
                 self.install_path, {'last_version': self.config.TAG_LAST_VERSION}
             )
-            TestCAPIAccess().run(
+            if system() == 'Linux' or system() == 'Darwin':  # windows needs lib or def
+                TestCAPIAccess().run(
+                    self.install_path, {}
+                )
+            TestCAPIDelayedAccess().run(
                 self.install_path, {}
             )
             if system() == 'Linux':
