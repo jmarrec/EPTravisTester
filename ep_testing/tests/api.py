@@ -173,7 +173,7 @@ class TestCAPIDelayedAccess(BaseTest):
         return """
 cmake_minimum_required(VERSION 3.10)
 project(TestCAPIAccess)
-add_executable(TestCAPIAccess func.cc)
+add_executable(TestCAPIAccess func.cpp)
 target_link_libraries(TestCAPIAccess ${CMAKE_DL_LIBS})
         """
 
@@ -242,13 +242,13 @@ FreeLibrary ((HINSTANCE)handle);
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         build_dir = mkdtemp()
         # print("Build dir set as: " + build_dir)
-        c_file_name = 'func.cc'
+        c_file_name = 'func.cpp'
         c_file_path = os.path.join(build_dir, c_file_name)
         with open(c_file_path, 'w') as f:
-            if platform.system() == 'Windows':
-                f.write(self._api_script_content_windows(install_root))
-            else:
+            if platform.system() == 'Linux' or platform.system() == 'Darwin':
                 f.write(self._api_script_content(install_root))
+            else:
+                f.write(self._api_script_content_windows(install_root))
         print(' [SRC FILE WRITTEN] ', end='')
         cmake_lists_path = os.path.join(build_dir, 'CMakeLists.txt')
         with open(cmake_lists_path, 'w') as f:
