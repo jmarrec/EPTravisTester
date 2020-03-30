@@ -219,24 +219,26 @@ int main() {
         return """
 #include <windows.h>
 #include <iostream>
-std::cout << "Opening eplus shared library...\\n";
-HINSTANCE hInst;
-hInst = LoadLibrary({EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME});
-if (hInst==NULL) {
-    std::cerr << "Cannot open library: \\n";
-    return 1;
+int main() {
+	std::cout << "Opening eplus shared library...\n";
+	HINSTANCE hInst;
+	hInst = LoadLibrary("{EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME}");
+	if (hInst == NULL) {
+		std::cerr << "Cannot open library: \n";
+		return 1;
+	}
+	typedef void (*INITFUNCTYPE)();
+	INITFUNCTYPE init;
+	init = (INITFUNCTYPE)GetProcAddress((HINSTANCE)hInst, "initializeFunctionalAPI");
+	if (!init) {
+		std::cerr << "Cannot get function \n";
+		return 1;
+	}
+	std::cout << "Calling to initialize\n";
+	init();
+	std::cout << "Closing library\\n";
+	FreeLibrary((HINSTANCE)hInst);
 }
-FARPROC fp;
-fp = GetProcAddress ((HINSTANCE)hInst, "initializeFunctionalAPI");
-if (!fp) {
-    std::cerr << "Cannot get function \\n";
-    return 1;
-}
-void * init = (void *)(intptr_t)fp;
-std::cout << "Calling to initialize\\n";
-init();
-std::cout << "Closing library\\n";
-FreeLibrary ((HINSTANCE)handle);
         """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
 
     def run(self, install_root: str, kwargs: dict):
@@ -279,9 +281,7 @@ FreeLibrary ((HINSTANCE)handle);
             command_line = [
                 'cmake',
                 '--build',
-                '.',
-                '-j',
-                '2'
+                '.'
             ]
             if platform.system() == 'Windows':
                 command_line.extend(['--config', 'Release'])
