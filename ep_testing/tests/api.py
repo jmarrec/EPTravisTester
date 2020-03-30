@@ -37,7 +37,7 @@ for t in [5.0, 15.0, 25.0]:
             elif platform.system() == 'Darwin':
                 py = '/usr/local/bin/python3'
             else:  # windows
-                py = '/c/Python36/python.exe'
+                py = 'C:\\Python36\\Python.exe'
             if os.path.exists(py):
                 print("PYTHON EXISTS AT: " + py)
             else:
