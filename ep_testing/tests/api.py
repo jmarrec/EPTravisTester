@@ -216,7 +216,7 @@ int main() {
     def run(self, install_root: str, kwargs: dict):
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         build_dir = mkdtemp()
-        print("Build dir set as: " + build_dir)
+        # print("Build dir set as: " + build_dir)
         c_file_name = 'func.cc'
         c_file_path = os.path.join(build_dir, c_file_name)
         with open(c_file_path, 'w') as f:
@@ -246,6 +246,7 @@ int main() {
                 check_call(command_line, env=my_env)
             else:
                 check_call(command_line, stdout=dev_null, stderr=STDOUT, env=my_env)
+            print(" [CONFIGURED] ", end='')
             command_line = [
                 'cmake',
                 '--build',
