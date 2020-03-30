@@ -218,6 +218,7 @@ int main() {
         install_path = install_path.replace('\\', '\\\\')
         return """
 #include <windows.h>
+#include <iostream>
 std::cout << "Opening eplus shared library...\\n";
 HINSTANCE hInst;
 hInst = LoadLibrary({EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME});
