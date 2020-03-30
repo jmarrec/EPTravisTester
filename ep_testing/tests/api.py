@@ -220,24 +220,24 @@ int main() {
 #include <windows.h>
 #include <iostream>
 int main() {
-	std::cout << "Opening eplus shared library...\n";
-	HINSTANCE hInst;
-	hInst = LoadLibrary("{EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME}");
-	if (hInst == NULL) {
-		std::cerr << "Cannot open library: \n";
-		return 1;
-	}
-	typedef void (*INITFUNCTYPE)();
-	INITFUNCTYPE init;
-	init = (INITFUNCTYPE)GetProcAddress((HINSTANCE)hInst, "initializeFunctionalAPI");
-	if (!init) {
-		std::cerr << "Cannot get function \n";
-		return 1;
-	}
-	std::cout << "Calling to initialize\n";
-	init();
-	std::cout << "Closing library\\n";
-	FreeLibrary((HINSTANCE)hInst);
+    std::cout << "Opening eplus shared library...\\n";
+    HINSTANCE hInst;
+    hInst = LoadLibrary("{EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME}");
+    if (hInst == NULL) {
+        std::cerr << "Cannot open library: \\n";
+        return 1;
+    }
+    typedef void (*INITFUNCTYPE)();
+    INITFUNCTYPE init;
+    init = (INITFUNCTYPE)GetProcAddress((HINSTANCE)hInst, "initializeFunctionalAPI");
+    if (!init) {
+        std::cerr << "Cannot get function \\n";
+        return 1;
+    }
+    std::cout << "Calling to initialize\\n";
+    init();
+    std::cout << "Closing library\\n";
+    FreeLibrary((HINSTANCE)hInst);
 }
         """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
 
@@ -295,11 +295,12 @@ int main() {
             raise
         # here is where it is limited -- we have to run from the e+ install dir
         try:
-            built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
-            target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
             if platform.system() == 'Windows':
-                built_binary_path += '.exe'
-                target_binary_path += '.exe'
+                built_binary_path = os.path.join(cmake_build_dir, 'Release', 'TestCAPIAccess')
+                target_binary_path = os.path.join(install_root, 'TestCAPIAccess.exe')
+            else:
+                built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
+                target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
             if self.Verbose:
                 check_call(['cp', built_binary_path, target_binary_path])
             else:
