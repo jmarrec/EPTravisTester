@@ -293,40 +293,122 @@ int main() {
         except CalledProcessError:
             print("C API Wrapper Compilation Failed!")
             raise
-        # here is where it is limited -- we have to run from the e+ install dir
-
-        # things get weird when running the program, clients need to understand the DLL search paths on their platform
-        # for Windows, the safe (default?) search path is:
-        # - The directory from which the application loaded.
-        # - The system directory. Use the GetSystemDirectory function to get the path of this directory.
-        # - The 16-bit system directory.
-        # - The Windows directory. Use the GetWindowsDirectory function to get the path of this directory.
-        # - The current directory.
-        # - The directories that are listed in the PATH environment variable.
-        # We will be trying to load the E+API DLL which depends on the python DLL.  Thus we need to make sure that
-        #  when we load the E+API DLL, Windows can find the Python DLL.  We can either:
-        # - Set the PATH to include the E+ install, then we don't have to move any files around or change working dir
-        #
-
-        try:
-            if platform.system() == 'Windows':
-                built_binary_path = os.path.join(cmake_build_dir, 'Release', 'TestCAPIAccess')
-                target_binary_path = os.path.join(install_root, 'TestCAPIAccess.exe')
-            else:
-                built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
-                target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
-            if self.Verbose:
-                check_call(['cp', built_binary_path, target_binary_path])
-            else:
-                check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
+        if platform.system() == 'Windows':
+            # things get weird when running the program, clients need to understand DLL search paths on their platform
+            # for Windows, the safe (default?) search path is:
+            # 1. The directory from which the application loaded.
+            # 2-4. System Directories -- not used
+            # 5. The current directory.
+            # 6. The directories that are listed in the PATH environment variable.
+            # We will be trying to load the E+API DLL which depends on the python DLL and other Windows related DLL.
+            # Thus we need to make sure that when we load the E+API DLL, Windows can find the Python DLL.  We can:
+            # A: Copy the binary we built into the E+ install, so the DLL is found with (1) no matter the working dir
+            # B: Change the working dir so that the DLLs are found with (5)
+            # C: Set PATH to include the E+ install, so they are found with (6)
+            # We can actually try all three
+            # A: Copy the binary in and run it from back in the build dir
+            built_binary_path = os.path.join(cmake_build_dir, 'Release', 'TestCAPIAccess')
+            target_binary_path = os.path.join(install_root, 'TestCAPIAccess.exe')
             command_line = [target_binary_path]
-            os.chdir(install_root)
-            if self.Verbose:
-                check_call(command_line)
-            else:
-                check_call(command_line, stdout=dev_null, stderr=STDOUT)
-            print(' [DONE]!')
-        except CalledProcessError:
-            print('C API Wrapper Execution failed!')
-            raise
+            try:
+                if self.Verbose:
+                    check_call(['cp', built_binary_path, target_binary_path])
+                    check_call(command_line)
+                else:
+                    check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
+                    check_call(command_line, stdout=dev_null, stderr=STDOUT)
+            except CalledProcessError:
+                print('Delayed C API Wrapper Case A execution failed')
+                raise
+            print(' [CASE_A_SUCCESS] ', end='')
+            os.remove(target_binary_path)  # clean out the copied binary to clean it all up
+            # B: Change the working dir and run from ep install dir
+            command_line = [built_binary_path]
+            try:
+                if self.Verbose:
+                    check_call(command_line, cwd=install_root)
+                else:
+                    check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
+            except CalledProcessError:
+                print('Delayed C API Wrapper Case B execution failed')
+                raise
+            print(' [CASE_B_SUCCESS] ', end='')
+            # C: Set Path to include e+ install
+            command_line = [built_binary_path]
+            try:
+                my_env = os.environ.copy()
+                my_env["PATH"] = install_root + ';' + my_env["PATH"]
+                if self.Verbose:
+                    check_call(command_line, env=my_env)
+                else:
+                    check_call(command_line, env=my_env, stdout=dev_null, stderr=STDOUT)
+            except CalledProcessError:
+                print('Delayed C API Wrapper Case C execution failed')
+                raise
+            print(' [CASE_C_SUCCESS] ', end='')
+
+        elif platform.system() == 'Darwin':
+            # For Mac the situation is notably different.
+            # The E+API DLL is adjusted so that it looks for the Python DLL at: @executable_path/Python
+            # that means whatever executable is currently running must have the Python lib in the same directory
+            # We have two options:
+            # A: we can copy out the Python lib to the executable dir and run from anywhere
+            # B: copy the executable into the E+ dir and run from anywhere
+            # There shouldn't be any reason to change working directories in either case
+            # We'll try both
+            # A: copy Python lib into exec dir and run exec
+            python_lib_path = os.path.join(install_root, 'Python')
+            target_lib_path = os.path.join(cmake_build_dir, 'Python')
+            built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
+            command_line = [built_binary_path]
+            # os.chdir(install_root)  # shouldn't be needed now
+            try:
+                if self.Verbose:
+                    check_call(['cp', python_lib_path, target_lib_path])
+                    check_call(command_line)
+                else:
+                    check_call(['cp', python_lib_path, target_lib_path], stdout=dev_null, stderr=STDOUT)
+                    check_call(command_line, stdout=dev_null, stderr=STDOUT)
+                os.remove(target_lib_path)  # remove the copied lib so it is clean again
+            except CalledProcessError:
+                print("Delayed C API Wrapper Case A execution failed")
+                raise
+            print(' [CASE_A_SUCCESS] ', end='')
+            # B: copy executable into E+ dir and run exec
+            built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
+            target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
+            command_line = [target_binary_path]
+            try:
+                if self.Verbose:
+                    check_call(['cp', built_binary_path, target_binary_path])
+                    check_call(command_line)
+                else:
+                    check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
+                    check_call(command_line, stdout=dev_null, stderr=STDOUT)
+            except CalledProcessError:
+                print("Delayed C API Wrapper Case B execution failed")
+                raise
+            print(' [CASE_B_SUCCESS] ', end='')
+        elif platform.system() == 'Linux':
+            # Linux SO search paths are *basically*:
+            # 1. directories listed in the LD_LIBRARY_PATH environment variable (DYLD_LIBRARY_PATH on OSX);
+            # 2. directories listed in the executable's rpath;
+            # 3. directories on the system search path
+            # I found that the default library path will resolve to the current dir if not specified, at least in
+            # elf/ld-load.c in the function fillin_rpath(...)
+            # So I thought it would need to be in the working directory, but it seems to find it right next to the
+            # executable no matter what.  Not sure.  Anyway, just test it by building and running it from the build
+            # dir and we'll see what happens
+            built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
+            command_line = [built_binary_path]
+            try:
+                if self.Verbose:
+                    check_call(command_line)
+                else:
+                    check_call(command_line, stdout=dev_null, stderr=STDOUT)
+            except CalledProcessError:
+                print("Delayed C API Wrapper Case A execution failed")
+                raise
+            print(' [CASE_A_SUCCESS] ', end='')
+        print(' [DONE]!')
         os.chdir(saved_dir)
