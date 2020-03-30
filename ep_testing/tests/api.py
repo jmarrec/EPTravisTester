@@ -214,7 +214,7 @@ int main() {
 
     @staticmethod
     def _api_script_content_windows(install_path: str) -> str:
-        lib_file_name = '\\energyplusapi.dll'
+        lib_file_name = '\\\\energyplusapi.dll'
         install_path = install_path.replace('\\', '\\\\')
         return """
 #include <windows.h>
