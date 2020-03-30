@@ -46,7 +46,7 @@ for t in [5.0, 15.0, 25.0]:
 
 
 class TestCAPIAccess(BaseTest):
-    Verbose = True
+    Verbose = False
 
     def name(self):
         return 'Test running an API script against energyplus in C'
@@ -163,7 +163,7 @@ int main() {
 
 
 class TestCAPIDelayedAccess(BaseTest):
-    Verbose = True
+    Verbose = False
 
     def name(self):
         return 'Test running an API script against energyplus in C but with delayed DLL loading'
@@ -294,6 +294,20 @@ int main() {
             print("C API Wrapper Compilation Failed!")
             raise
         # here is where it is limited -- we have to run from the e+ install dir
+
+        # things get weird when running the program, clients need to understand the DLL search paths on their platform
+        # for Windows, the safe (default?) search path is:
+        # - The directory from which the application loaded.
+        # - The system directory. Use the GetSystemDirectory function to get the path of this directory.
+        # - The 16-bit system directory.
+        # - The Windows directory. Use the GetWindowsDirectory function to get the path of this directory.
+        # - The current directory.
+        # - The directories that are listed in the PATH environment variable.
+        # We will be trying to load the E+API DLL which depends on the python DLL.  Thus we need to make sure that
+        #  when we load the E+API DLL, Windows can find the Python DLL.  We can either:
+        # - Set the PATH to include the E+ install, then we don't have to move any files around or change working dir
+        #
+
         try:
             if platform.system() == 'Windows':
                 built_binary_path = os.path.join(cmake_build_dir, 'Release', 'TestCAPIAccess')
