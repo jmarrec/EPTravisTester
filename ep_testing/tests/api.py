@@ -184,8 +184,7 @@ target_link_libraries(TestCAPIAccess ${CMAKE_DL_LIBS})
         elif platform.system() == 'Darwin':
             lib_file_name = '/libenergyplusapi.dylib'
         else:  # windows
-            lib_file_name = '\\energyplusapi.dll'
-            install_path = install_path.replace('\\', '\\\\')
+            raise EPTestingException('Dont call TestCAPIDelayedAccess._api_script_content for Windows')
         return """
 #include <iostream>
 #include <dlfcn.h>
@@ -213,6 +212,32 @@ int main() {
 }
         """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
 
+    @staticmethod
+    def _api_script_content_windows(install_path: str) -> str:
+        lib_file_name = '\\energyplusapi.dll'
+        install_path = install_path.replace('\\', '\\\\')
+        return """
+#include <windows.h>
+std::cout << "Opening eplus shared library...\\n";
+HINSTANCE hInst;
+hInst = LoadLibrary({EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME});
+if (hInst==NULL) {
+    std::cerr << "Cannot open library: \\n";
+    return 1;
+}
+FARPROC fp;
+fp = GetProcAddress ((HINSTANCE)hInst, "initializeFunctionalAPI");
+if (!fp) {
+    std::cerr << "Cannot get function \\n";
+    return 1;
+}
+void * init = (void *)(intptr_t)fp;
+std::cout << "Calling to initialize\\n";
+init();
+std::cout << "Closing library\\n";
+FreeLibrary ((HINSTANCE)handle);
+        """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
+
     def run(self, install_root: str, kwargs: dict):
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         build_dir = mkdtemp()
@@ -220,7 +245,10 @@ int main() {
         c_file_name = 'func.cc'
         c_file_path = os.path.join(build_dir, c_file_name)
         with open(c_file_path, 'w') as f:
-            f.write(self._api_script_content(install_root))
+            if platform.system() == 'Windows':
+                f.write(self._api_script_content_windows(install_root))
+            else:
+                f.write(self._api_script_content(install_root))
         print(' [SRC FILE WRITTEN] ', end='')
         cmake_lists_path = os.path.join(build_dir, 'CMakeLists.txt')
         with open(cmake_lists_path, 'w') as f:
