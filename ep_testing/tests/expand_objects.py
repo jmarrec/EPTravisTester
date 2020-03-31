@@ -17,7 +17,7 @@ class TestExpandObjectsAndRun(BaseTest):
         test_file = kwargs['test_file']
         print('* Running test class "%s" on file "%s"... ' % (self.__class__.__name__, test_file), end='')
         original_idf_path = os.path.join(install_root, 'ExampleFiles', test_file)
-        target_idf_path = os.path.join(install_root, 'in.idf')
+        target_idf_path = os.path.join(os.getcwd(), 'in.idf')
         try:
             copyfile(original_idf_path, target_idf_path)
         except Exception as e:
@@ -32,7 +32,7 @@ class TestExpandObjectsAndRun(BaseTest):
             check_call([expand_objects_binary], stdout=dev_null, stderr=STDOUT)
         except CalledProcessError:
             raise EPTestingException('ExpandObjects failed!')
-        expanded_idf_path = os.path.join(install_root, 'expanded.idf')
+        expanded_idf_path = os.path.join(os.getcwd(), 'expanded.idf')
         if os.path.exists(expanded_idf_path):
             print(' [EXPANDED] ', end='')
         else:
