@@ -162,7 +162,8 @@ int main() {
                     check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
             elif platform.system() == 'Windows':
                 # for Windows, we just need to make sure to append .exe
-                new_binary_path = os.path.join(cmake_build_dir, self.target_name + '.exe')
+                new_binary_path = os.path.join(cmake_build_dir, 'Release', self.target_name + '.exe')
+                print("Trying to run binary at: " + new_binary_path)
                 command_line = [new_binary_path]
                 if self.verbose:
                     check_call(command_line, cwd=install_root)
