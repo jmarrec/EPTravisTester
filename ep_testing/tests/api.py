@@ -102,6 +102,7 @@ class TestCAPIAccess(BaseTest):
             lib_file_name = 'libenergyplusapi.dylib'
         else:  # windows
             lib_file_name = 'energyplusapi.lib'
+            install_path = install_path.replace('\\', '\\\\')
         return """
 cmake_minimum_required(VERSION 3.10)
 project({TARGET_NAME})
