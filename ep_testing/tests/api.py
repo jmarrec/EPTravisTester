@@ -101,7 +101,7 @@ class TestCAPIAccess(BaseTest):
         elif platform.system() == 'Darwin':
             lib_file_name = 'libenergyplusapi.dylib'
         else:  # windows
-            raise EPTestingException('This doesnt work on windows yet')
+            lib_file_name = 'energyplusapi.lib'
         return """
 cmake_minimum_required(VERSION 3.10)
 project({TARGET_NAME})
@@ -151,7 +151,7 @@ int main() {
         cmake_build_dir = os.path.join(build_dir, 'build')
         make_build_dir_and_build(cmake_build_dir, self.verbose)
         try:
-            if platform.system() == 'Linux':
+            if platform.system() == 'Linux' or platform.system() == 'Windows':
                 # for Linux, we don't have to do anything, just run it
                 new_binary_path = os.path.join(cmake_build_dir, self.target_name)
                 command_line = [new_binary_path]

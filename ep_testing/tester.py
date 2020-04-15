@@ -34,15 +34,10 @@ class Tester:
         TransitionOldFile().run(
             self.install_path, self.verbose, {'last_version': self.config.tag_last_version}
         )
-        # to use the DLL at link-time, Windows requires the lib file, so just build this on Mac/Linux
-        if system() == 'Linux' or system() == 'Darwin':  # windows needs lib or def
-            TestCAPIAccess().run(
-                self.install_path, self.verbose, {}
-            )
-        else:
-            if self.verbose:
-                print("Building against the DLL at link time on Linux/Mac ONLY until we get a .lib file")
-        # however, linking at run-time works just fine on all three platforms
+        # linking to DLL at build time and delayed works on all platforms
+        TestCAPIAccess().run(
+            self.install_path, self.verbose, {}
+        )
         TestCppAPIDelayedAccess().run(
             self.install_path, self.verbose, {}
         )
