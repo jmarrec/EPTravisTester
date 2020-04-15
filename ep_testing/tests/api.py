@@ -152,9 +152,17 @@ int main() {
         cmake_build_dir = os.path.join(build_dir, 'build')
         make_build_dir_and_build(cmake_build_dir, self.verbose)
         try:
-            if platform.system() == 'Linux' or platform.system() == 'Windows':
+            if platform.system() == 'Linux':
                 # for Linux, we don't have to do anything, just run it
                 new_binary_path = os.path.join(cmake_build_dir, self.target_name)
+                command_line = [new_binary_path]
+                if self.verbose:
+                    check_call(command_line, cwd=install_root)
+                else:
+                    check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
+            elif platform.system() == 'Windows':
+                # for Windows, we just need to make sure to append .exe
+                new_binary_path = os.path.join(cmake_build_dir, self.target_name + '.exe')
                 command_line = [new_binary_path]
                 if self.verbose:
                     check_call(command_line, cwd=install_root)
