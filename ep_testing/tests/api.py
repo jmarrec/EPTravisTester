@@ -1,10 +1,19 @@
 import os
 import platform
-from tempfile import mkdtemp, mkstemp
 from subprocess import check_call, CalledProcessError, STDOUT
+from tempfile import mkdtemp, mkstemp
+from typing import List
 
 from ep_testing.exceptions import EPTestingException
 from ep_testing.tests.base import BaseTest
+
+
+def my_check_call(verbose: bool, command_line: List[str], **kwargs) -> None:
+    if verbose:
+        check_call(command_line, **kwargs)
+    else:
+        with open(os.devnull, 'w') as dev_null:
+            check_call(command_line, stdout=dev_null, stderr=STDOUT, **kwargs)
 
 
 class TestPythonAPIAccess(BaseTest):
@@ -12,25 +21,29 @@ class TestPythonAPIAccess(BaseTest):
         return 'Test running an API script against pyenergyplus'
 
     @staticmethod
-    def _api_script_content() -> str:
+    def _api_script_content(install_root: str) -> str:
+        if platform.system() in ['Linux', 'Darwin']:
+            pass
+        else:  # windows
+            install_root = install_root.replace('\\', '\\\\')
         return """
 #!/usr/bin/env python3
+sys.path.insert(0, '%s')
 from pyenergyplus.api import EnergyPlusAPI
 api = EnergyPlusAPI()
 glycol = api.functional.glycol(u"water")
 for t in [5.0, 15.0, 25.0]:
     cp = glycol.specific_heat(t)
     rho = glycol.density(t)
-        """
+        """ % install_root
 
     def run(self, install_root: str, verbose: bool, kwargs: dict):
         self.verbose = verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         handle, python_file_path = mkstemp(suffix='.py')
         with os.fdopen(handle, 'w') as f:
-            f.write(self._api_script_content())
+            f.write(self._api_script_content(install_root))
         print(' [FILE WRITTEN] ', end='')
-        dev_null = open(os.devnull, 'w')
         try:
             if platform.system() == 'Linux':
                 py = 'python3'
@@ -38,14 +51,7 @@ for t in [5.0, 15.0, 25.0]:
                 py = '/usr/local/bin/python3'
             else:  # windows
                 py = 'C:\\Python36\\Python.exe'
-            my_env = os.environ.copy()
-            my_env['PYTHONPATH'] = install_root
-            if platform.system() == 'Windows':
-                my_env['PATH'] = install_root + ';' + my_env['PATH']
-            if self.verbose:
-                check_call([py, python_file_path], env=my_env)
-            else:
-                check_call([py, python_file_path], env=my_env, stdout=dev_null, stderr=STDOUT)
+            my_check_call(self.verbose, [py, python_file_path])
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('Python API Wrapper Script failed!')
@@ -57,28 +63,14 @@ def make_build_dir_and_build(cmake_build_dir: str, verbose: bool):
         my_env = os.environ.copy()
         if platform.system() == 'Darwin':  # my local comp didn't have cmake in path except in interact shells
             my_env["PATH"] = "/usr/local/bin:" + my_env["PATH"]
-        command_line = [
-            'cmake',
-            '..'
-        ]
-        dev_null = open(os.devnull, 'w')
+        command_line = ['cmake', '..']
         if platform.system() == 'Windows':
             command_line.extend(['-G', 'Visual Studio 15 Win64'])
-        if verbose:
-            check_call(command_line, cwd=cmake_build_dir, env=my_env)
-        else:
-            check_call(command_line, cwd=cmake_build_dir, stdout=dev_null, stderr=STDOUT, env=my_env)
-        command_line = [
-            'cmake',
-            '--build',
-            '.'
-        ]
+        my_check_call(verbose, command_line, cwd=cmake_build_dir, env=my_env)
+        command_line = ['cmake', '--build', '.']
         if platform.system() == 'Windows':
             command_line.extend(['--config', 'Release'])
-        if verbose:
-            check_call(command_line, env=my_env, cwd=cmake_build_dir)
-        else:
-            check_call(command_line, env=my_env, cwd=cmake_build_dir, stdout=dev_null, stderr=STDOUT)
+        my_check_call(verbose, command_line, env=my_env, cwd=cmake_build_dir)
         print(' [COMPILED] ', end='')
     except CalledProcessError:
         print("C API Wrapper Compilation Failed!")
@@ -138,7 +130,6 @@ int main() {
         self.verbose = verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         build_dir = mkdtemp()
-        # print("Build dir set as: " + build_dir)
         c_file_name = self.source_file_name
         c_file_path = os.path.join(build_dir, c_file_name)
         with open(c_file_path, 'w') as f:
@@ -148,7 +139,6 @@ int main() {
         with open(cmake_lists_path, 'w') as f:
             f.write(self._api_cmakelists_content(install_root))
         print(' [CMAKE FILE WRITTEN] ', end='')
-        dev_null = open(os.devnull, 'w')
         cmake_build_dir = os.path.join(build_dir, 'build')
         make_build_dir_and_build(cmake_build_dir, self.verbose)
         try:
@@ -156,18 +146,12 @@ int main() {
                 # for Linux, we don't have to do anything, just run it
                 new_binary_path = os.path.join(cmake_build_dir, self.target_name)
                 command_line = [new_binary_path]
-                if self.verbose:
-                    check_call(command_line, cwd=install_root)
-                else:
-                    check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
+                my_check_call(self.verbose, command_line, cwd=install_root)
             elif platform.system() == 'Windows':
                 # for Windows, we just need to make sure to append .exe
                 new_binary_path = os.path.join(cmake_build_dir, 'Release', self.target_name + '.exe')
                 command_line = [new_binary_path]
-                if self.verbose:
-                    check_call(command_line, cwd=install_root)
-                else:
-                    check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
+                my_check_call(self.verbose, command_line, cwd=install_root)
             elif platform.system() == 'Darwin':
                 # for Mac, we can maybe do one of two things.
                 # A: We can copy the new binary into the E+ install and run from there, or
@@ -176,15 +160,9 @@ int main() {
                 #    demonstrate that here.
                 built_binary_path = os.path.join(cmake_build_dir, self.target_name)
                 new_binary_path = os.path.join(install_root, self.target_name)
-                if self.verbose:
-                    check_call(['cp', built_binary_path, new_binary_path])
-                else:
-                    check_call(['cp', built_binary_path, new_binary_path], stdout=dev_null, stderr=STDOUT)
-                    command_line = [new_binary_path]
-                    if self.verbose:
-                        check_call(command_line, cwd=install_root)
-                    else:
-                        check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
+                my_check_call(self.verbose, ['cp', built_binary_path, new_binary_path])
+                command_line = [new_binary_path]
+                my_check_call(self.verbose, command_line, cwd=install_root)
         except CalledProcessError:
             print('C API Wrapper Execution failed!')
             raise
@@ -290,7 +268,6 @@ int main() {
         with open(cmake_lists_path, 'w') as f:
             f.write(self._api_cmakelists_content())
         print(' [CMAKE FILE WRITTEN] ', end='')
-        dev_null = open(os.devnull, 'w')
         cmake_build_dir = os.path.join(build_dir, 'build')
         make_build_dir_and_build(cmake_build_dir, self.verbose)
         if platform.system() == 'Windows':
@@ -311,12 +288,8 @@ int main() {
             target_binary_path = os.path.join(install_root, 'TestCAPIAccess.exe')
             command_line = [target_binary_path]
             try:
-                if self.verbose:
-                    check_call(['cp', built_binary_path, target_binary_path])
-                    check_call(command_line)
-                else:
-                    check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
-                    check_call(command_line, stdout=dev_null, stderr=STDOUT)
+                my_check_call(self.verbose, ['cp', built_binary_path, target_binary_path])
+                my_check_call(self.verbose, command_line)
             except CalledProcessError:
                 print('Delayed C API Wrapper Case A execution failed')
                 raise
@@ -325,10 +298,7 @@ int main() {
             # B: Change the working dir and run from ep install dir
             command_line = [built_binary_path]
             try:
-                if self.verbose:
-                    check_call(command_line, cwd=install_root)
-                else:
-                    check_call(command_line, cwd=install_root, stdout=dev_null, stderr=STDOUT)
+                my_check_call(self.verbose, command_line, cwd=install_root)
             except CalledProcessError:
                 print('Delayed C API Wrapper Case B execution failed')
                 raise
@@ -338,10 +308,7 @@ int main() {
             try:
                 my_env = os.environ.copy()
                 my_env["PATH"] = install_root + ';' + my_env["PATH"]
-                if self.verbose:
-                    check_call(command_line, env=my_env)
-                else:
-                    check_call(command_line, env=my_env, stdout=dev_null, stderr=STDOUT)
+                my_check_call(self.verbose, command_line, env=my_env)
             except CalledProcessError:
                 print('Delayed C API Wrapper Case C execution failed')
                 raise
@@ -362,12 +329,8 @@ int main() {
             built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
             command_line = [built_binary_path]
             try:
-                if self.verbose:
-                    check_call(['cp', python_lib_path, target_lib_path])
-                    check_call(command_line)
-                else:
-                    check_call(['cp', python_lib_path, target_lib_path], stdout=dev_null, stderr=STDOUT)
-                    check_call(command_line, stdout=dev_null, stderr=STDOUT)
+                my_check_call(self.verbose, ['cp', python_lib_path, target_lib_path])
+                my_check_call(self.verbose, command_line)
                 os.remove(target_lib_path)  # remove the copied lib so it is clean again
             except CalledProcessError:
                 print("Delayed C API Wrapper Case A execution failed")
@@ -378,12 +341,8 @@ int main() {
             target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
             command_line = [target_binary_path]
             try:
-                if self.verbose:
-                    check_call(['cp', built_binary_path, target_binary_path])
-                    check_call(command_line)
-                else:
-                    check_call(['cp', built_binary_path, target_binary_path], stdout=dev_null, stderr=STDOUT)
-                    check_call(command_line, stdout=dev_null, stderr=STDOUT)
+                my_check_call(self.verbose, ['cp', built_binary_path, target_binary_path])
+                my_check_call(self.verbose, command_line)
             except CalledProcessError:
                 print("Delayed C API Wrapper Case B execution failed")
                 raise
@@ -401,10 +360,7 @@ int main() {
             built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
             command_line = [built_binary_path]
             try:
-                if self.verbose:
-                    check_call(command_line)
-                else:
-                    check_call(command_line, stdout=dev_null, stderr=STDOUT)
+                my_check_call(self.verbose, command_line)
             except CalledProcessError:
                 print("Delayed C API Wrapper Case A execution failed")
                 raise
