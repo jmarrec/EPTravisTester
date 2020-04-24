@@ -28,6 +28,7 @@ class TestPythonAPIAccess(BaseTest):
             install_root = install_root.replace('\\', '\\\\')
         return """
 #!/usr/bin/env python3
+import sys
 sys.path.insert(0, '%s')
 from pyenergyplus.api import EnergyPlusAPI
 api = EnergyPlusAPI()
