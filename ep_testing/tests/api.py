@@ -284,57 +284,11 @@ int main() {
         make_build_dir_and_build(cmake_build_dir, self.verbose)
         if platform.system() == 'Windows':
             built_binary_path = os.path.join(cmake_build_dir, 'Release', 'TestCAPIAccess')
+        else:
+            built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
+        try:
             my_check_call(self.verbose, [built_binary_path])
-            print(' [CASE_A_SUCCESS] ', end='')
-        elif platform.system() == 'Darwin':
-            # For Mac the situation is notably different.
-            # The E+API DLL is adjusted so that it looks for the Python DLL at: @executable_path/Python
-            # that means whatever executable is currently running must have the Python lib in the same directory
-            # We have two options:
-            # A: we can copy out the Python lib to the executable dir and run from anywhere
-            # B: copy the executable into the E+ dir and run from anywhere
-            # There shouldn't be any reason to change working directories in either case
-            # We'll try both
-            # A: copy Python lib into exec dir and run exec
-            python_lib_path = os.path.join(install_root, 'Python')
-            target_lib_path = os.path.join(cmake_build_dir, 'Python')
-            built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
-            command_line = [built_binary_path]
-            try:
-                my_check_call(self.verbose, ['cp', python_lib_path, target_lib_path])
-                my_check_call(self.verbose, command_line)
-                os.remove(target_lib_path)  # remove the copied lib so it is clean again
-            except CalledProcessError:
-                print("Delayed C API Wrapper Case A execution failed")
-                raise
-            print(' [CASE_A_SUCCESS] ', end='')
-            # B: copy executable into E+ dir and run exec
-            built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
-            target_binary_path = os.path.join(install_root, 'TestCAPIAccess')
-            command_line = [target_binary_path]
-            try:
-                my_check_call(self.verbose, ['cp', built_binary_path, target_binary_path])
-                my_check_call(self.verbose, command_line)
-            except CalledProcessError:
-                print("Delayed C API Wrapper Case B execution failed")
-                raise
-            print(' [CASE_B_SUCCESS] ', end='')
-        elif platform.system() == 'Linux':
-            # Linux SO search paths are *basically*:
-            # 1. directories listed in the LD_LIBRARY_PATH environment variable (DYLD_LIBRARY_PATH on OSX);
-            # 2. directories listed in the executable's rpath;
-            # 3. directories on the system search path
-            # I found that the default library path will resolve to the current dir if not specified, at least in
-            # elf/ld-load.c in the function fillin_rpath(...)
-            # So I thought it would need to be in the working directory, but it seems to find it right next to the
-            # executable no matter what.  Not sure.  Anyway, just test it by building and running it from the build
-            # dir and we'll see what happens
-            built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
-            command_line = [built_binary_path]
-            try:
-                my_check_call(self.verbose, command_line)
-            except CalledProcessError:
-                print("Delayed C API Wrapper Case A execution failed")
-                raise
-            print(' [CASE_A_SUCCESS] ', end='')
+        except CalledProcessError:
+            print("Delayed C API Wrapper Case A execution failed")
+            raise
         print(' [DONE]!')
