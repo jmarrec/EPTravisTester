@@ -143,7 +143,7 @@ int main() {
         cmake_build_dir = os.path.join(build_dir, 'build')
         make_build_dir_and_build(cmake_build_dir, self.verbose)
         try:
-            if platform.system() == 'Linux':
+            if platform.system() in ['Linux', 'Darwin']:
                 # for Linux, we don't have to do anything, just run it
                 new_binary_path = os.path.join(cmake_build_dir, self.target_name)
                 command_line = [new_binary_path]
@@ -153,17 +153,18 @@ int main() {
                 new_binary_path = os.path.join(cmake_build_dir, 'Release', self.target_name + '.exe')
                 command_line = [new_binary_path]
                 my_check_call(self.verbose, command_line, cwd=install_root)
-            elif platform.system() == 'Darwin':
-                # for Mac, we can maybe do one of two things.
-                # A: We can copy the new binary into the E+ install and run from there, or
-                # B: We could potentially copy the Python DLL and E+ API DLL into the build dir and run from there, but
-                #    that would be silly -- we wouldn't be expecting users to drag these resources around, so we won't
-                #    demonstrate that here.
-                built_binary_path = os.path.join(cmake_build_dir, self.target_name)
-                new_binary_path = os.path.join(install_root, self.target_name)
-                my_check_call(self.verbose, ['cp', built_binary_path, new_binary_path])
-                command_line = [new_binary_path]
-                my_check_call(self.verbose, command_line, cwd=install_root)
+            # elif platform.system() == 'Darwin':
+            #     # for Mac, we may not need to do anything else now.  I'm just adding this to the linux block
+            #     # for Mac, we can maybe do one of two things.
+            #     # A: We can copy the new binary into the E+ install and run from there, or
+            #     # B: We could potentially copy the Python DLL and E+ API DLL into the build dir and run from there, bu
+            #     #    that would be silly -- we wouldn't be expecting users to drag these resources around, so we won't
+            #     #    demonstrate that here.
+            #     built_binary_path = os.path.join(cmake_build_dir, self.target_name)
+            #     new_binary_path = os.path.join(install_root, self.target_name)
+            #     my_check_call(self.verbose, ['cp', built_binary_path, new_binary_path])
+            #     command_line = [new_binary_path]
+            #     my_check_call(self.verbose, command_line, cwd=install_root)
         except CalledProcessError:
             print('C API Wrapper Execution failed!')
             raise
