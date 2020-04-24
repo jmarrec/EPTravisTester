@@ -119,9 +119,9 @@ target_link_libraries({TARGET_NAME} ${{DLL_PATH}})
 if (APPLE)
     add_custom_command(
         TARGET TestCAPIAccess POST_BUILD
-        COMMAND 
-            ${{CMAKE_COMMAND}} 
-            -DDLL_PATH=${{DLL_PATH}} -DTARGET_PATH=$<TARGET_FILE:{TARGET_NAME}> 
+        COMMAND
+            ${{CMAKE_COMMAND}}
+            -DDLL_PATH=${{DLL_PATH}} -DTARGET_PATH=$<TARGET_FILE:{TARGET_NAME}>
             -P "${{CMAKE_SOURCE_DIR}}/fixup.cmake"
         DEPENDS "${{CMAKE_SOURCE_DIR}}/fixup.cmake"
     )
