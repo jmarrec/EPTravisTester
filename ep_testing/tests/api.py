@@ -283,52 +283,9 @@ int main() {
         cmake_build_dir = os.path.join(build_dir, 'build')
         make_build_dir_and_build(cmake_build_dir, self.verbose)
         if platform.system() == 'Windows':
-            # let's just try to run without moving anything around
             built_binary_path = os.path.join(cmake_build_dir, 'Release', 'TestCAPIAccess')
             my_check_call(self.verbose, [built_binary_path])
-            # things get weird when running the program, clients need to understand DLL search paths on their platform
-            # for Windows, the safe (default?) search path is:
-            # 1. The directory from which the application loaded.
-            # 2-4. System Directories -- not used
-            # 5. The current directory.
-            # 6. The directories that are listed in the PATH environment variable.
-            # We will be trying to load the E+API DLL which depends on the python DLL and other Windows related DLL.
-            # Thus we need to make sure that when we load the E+API DLL, Windows can find the Python DLL.  We can:
-            # A: Copy the binary we built into the E+ install, so the DLL is found with (1) no matter the working dir
-            # B: Change the working dir so that the DLLs are found with (5)
-            # C: Set PATH to include the E+ install, so they are found with (6)
-            # We can actually try all three
-            # A: Copy the binary in and run it from back in the build dir
-            #
-            # target_binary_path = os.path.join(install_root, 'TestCAPIAccess.exe')
-            # command_line = [target_binary_path]
-            # try:
-            #     my_check_call(self.verbose, ['cp', built_binary_path, target_binary_path])
-            #     my_check_call(self.verbose, command_line)
-            # except CalledProcessError:
-            #     print('Delayed C API Wrapper Case A execution failed')
-            #     raise
             print(' [CASE_A_SUCCESS] ', end='')
-            # os.remove(target_binary_path)  # clean out the copied binary to clean it all up
-            # B: Change the working dir and run from ep install dir
-            # command_line = [built_binary_path]
-            # try:
-            #     my_check_call(self.verbose, command_line, cwd=install_root)
-            # except CalledProcessError:
-            #     print('Delayed C API Wrapper Case B execution failed')
-            #     raise
-            # print(' [CASE_B_SUCCESS] ', end='')
-            # # C: Set Path to include e+ install
-            # command_line = [built_binary_path]
-            # try:
-            #     my_env = os.environ.copy()
-            #     my_env["PATH"] = install_root + ';' + my_env["PATH"]
-            #     my_check_call(self.verbose, command_line, env=my_env)
-            # except CalledProcessError:
-            #     print('Delayed C API Wrapper Case C execution failed')
-            #     raise
-            # print(' [CASE_C_SUCCESS] ', end='')
-
         elif platform.system() == 'Darwin':
             # For Mac the situation is notably different.
             # The E+API DLL is adjusted so that it looks for the Python DLL at: @executable_path/Python
