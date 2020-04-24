@@ -88,6 +88,18 @@ class TestCAPIAccess(BaseTest):
     def name(self):
         return 'Test running an API script against energyplus in C'
 
+    def _api_fixup_content(self) -> str:
+        return """
+include(GetPrerequisites)
+get_prerequisites(${TARGET_PATH} PR 0 0 "" "")
+foreach(P IN LISTS PR)
+    string(FIND ${P} "energyplus" EPFOUND)
+    if (NOT EPFOUND EQUAL -1)
+        execute_process(COMMAND install_name_tool -change ${P} "${DLL_PATH}" ${TARGET_PATH})
+    endif()
+endforeach()
+        """
+
     def _api_cmakelists_content(self, install_path: str) -> str:
         if platform.system() == 'Linux':
             lib_file_name = 'libenergyplusapi.so'
@@ -101,7 +113,15 @@ cmake_minimum_required(VERSION 3.10)
 project({TARGET_NAME})
 include_directories("{EPLUS_INSTALL_NO_SLASH}/include")
 add_executable({TARGET_NAME} {SOURCE_FILE})
-target_link_libraries({TARGET_NAME} "{EPLUS_INSTALL_NO_SLASH}/{LIB_FILE_NAME}")
+set(DLL_PATH "{EPLUS_INSTALL_NO_SLASH}/{LIB_FILE_NAME}")
+target_link_libraries({TARGET_NAME} ${{DLL_PATH}})
+if (APPLE)
+    add_custom_command(
+        TARGET TestCAPIAccess POST_BUILD
+        COMMAND ${{CMAKE_COMMAND}} -DDLL_PATH=${{DLL_PATH}} -DTARGET_PATH=$<TARGET_FILE:{TARGET_NAME}> -P "${{CMAKE_SOURCE_DIR}}/fixup.cmake"
+        DEPENDS "${{CMAKE_SOURCE_DIR}}/fixup.cmake"
+    )
+endif()
         """.format(
             EPLUS_INSTALL_NO_SLASH=install_path, LIB_FILE_NAME=lib_file_name,
             TARGET_NAME=self.target_name, SOURCE_FILE=self.source_file_name
@@ -140,31 +160,18 @@ int main() {
         with open(cmake_lists_path, 'w') as f:
             f.write(self._api_cmakelists_content(install_root))
         print(' [CMAKE FILE WRITTEN] ', end='')
+        fixup_cmake_path = os.path.join(build_dir, 'fixup.cmake')
+        with open(fixup_cmake_path, 'w') as f:
+            f.write(self._api_fixup_content())
+        print(' [FIXUP CMAKE WRITTEN] ', end='')
         cmake_build_dir = os.path.join(build_dir, 'build')
         make_build_dir_and_build(cmake_build_dir, self.verbose)
         try:
-            if platform.system() in ['Linux', 'Darwin']:
-                # for Linux, we don't have to do anything, just run it
-                new_binary_path = os.path.join(cmake_build_dir, self.target_name)
-                command_line = [new_binary_path]
-                my_check_call(self.verbose, command_line, cwd=install_root)
-            elif platform.system() == 'Windows':
-                # for Windows, we just need to make sure to append .exe
+            new_binary_path = os.path.join(cmake_build_dir, self.target_name)
+            if platform.system() == 'Windows':  # override the path/name for Windows
                 new_binary_path = os.path.join(cmake_build_dir, 'Release', self.target_name + '.exe')
-                command_line = [new_binary_path]
-                my_check_call(self.verbose, command_line, cwd=install_root)
-            # elif platform.system() == 'Darwin':
-            #     # for Mac, we may not need to do anything else now.  I'm just adding this to the linux block
-            #     # for Mac, we can maybe do one of two things.
-            #     # A: We can copy the new binary into the E+ install and run from there, or
-            #     # B: We could potentially copy the Python DLL and E+ API DLL into the build dir and run from there, bu
-            #     #    that would be silly -- we wouldn't be expecting users to drag these resources around, so we won't
-            #     #    demonstrate that here.
-            #     built_binary_path = os.path.join(cmake_build_dir, self.target_name)
-            #     new_binary_path = os.path.join(install_root, self.target_name)
-            #     my_check_call(self.verbose, ['cp', built_binary_path, new_binary_path])
-            #     command_line = [new_binary_path]
-            #     my_check_call(self.verbose, command_line, cwd=install_root)
+            command_line = [new_binary_path]
+            my_check_call(self.verbose, command_line, cwd=install_root)
         except CalledProcessError:
             print('C API Wrapper Execution failed!')
             raise
