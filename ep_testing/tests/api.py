@@ -289,6 +289,6 @@ int main() {
         try:
             my_check_call(self.verbose, [built_binary_path])
         except CalledProcessError:
-            print("Delayed C API Wrapper Case A execution failed")
+            print("Delayed C API Wrapper execution failed")
             raise
         print(' [DONE]!')
