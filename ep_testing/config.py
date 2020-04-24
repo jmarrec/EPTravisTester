@@ -6,7 +6,7 @@ class TestConfiguration:
 
     def __init__(self):
         self.this_version = '9.3'
-        self.tag_this_version = 'v9.3.0-RC2'
+        self.tag_this_version = 'APIFollowUpTestPackage4'
         self.last_version = '9.2'
         self.tag_last_version = 'v9.2.0'
 
@@ -15,7 +15,7 @@ class TestConfiguration:
         self.skipped_download_dir = '/tmp/'
 
         # But if we are on Travis, we override it to always download a new asset
-        if os.environ.get('TRAVIS', None) is not None:
+        if os.environ.get('TRAVIS'):
             self.skip_download = False
 
         if self.skip_download:
