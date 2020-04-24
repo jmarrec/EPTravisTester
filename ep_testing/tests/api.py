@@ -88,7 +88,8 @@ class TestCAPIAccess(BaseTest):
     def name(self):
         return 'Test running an API script against energyplus in C'
 
-    def _api_fixup_content(self) -> str:
+    @staticmethod
+    def _api_fixup_content() -> str:
         return """
 include(GetPrerequisites)
 get_prerequisites(${TARGET_PATH} PR 0 0 "" "")
