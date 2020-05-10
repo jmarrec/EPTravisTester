@@ -6,7 +6,7 @@ class TestConfiguration:
 
     def __init__(self):
         self.this_version = '9.3'
-        self.tag_this_version = 'APIFollowUpTestPackage4'
+        self.tag_this_version = 'v9.3.0-BugFix-RC1'
         self.last_version = '9.2'
         self.tag_last_version = 'v9.2.0'
 
