@@ -4,7 +4,6 @@ from tempfile import mkdtemp
 
 from ep_testing.config import TestConfiguration
 from ep_testing.tests.api import TestPythonAPIAccess, TestCAPIAccess, TestCppAPIDelayedAccess
-from ep_testing.tests.documentation import TestVersionInfoInDocumentation
 from ep_testing.tests.energyplus import TestPlainDDRunEPlusFile
 from ep_testing.tests.expand_objects import TestExpandObjectsAndRun
 from ep_testing.tests.transition import TransitionOldFile
@@ -49,13 +48,4 @@ class Tester:
         else:
             if self.verbose:
                 print("Running Python API Linux and Windows ONLY until we get the @executable_path resolved on Mac")
-        # Documentation builds will be on all the platforms once I get pdftk and pdftotext or equivalent installed
-        if system() == 'Linux':
-            TestVersionInfoInDocumentation().run(
-                self.install_path, self.verbose,
-                {'pdf_file': 'AuxiliaryPrograms.pdf', 'version_string': self.config.this_version}
-            )
-        else:
-            if self.verbose:
-                print("Doing documentation tests on Linux ONLY until we get pdftk and pdftotext or equiv installed")
         os.chdir(saved_path)
