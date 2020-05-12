@@ -1,5 +1,5 @@
 from distutils import log
-from typing import List
+from typing import List, Union
 import os
 import platform
 import requests
@@ -24,7 +24,11 @@ class Downloader:
             raise EPTestingException('GITHUB_TOKEN not found in environment, cannot continue')
         self.auth_header = {'Authorization': 'token %s' % github_token}
         user_response = requests.get(self.User_url, headers=self.auth_header)
-        if user_response.status_code != 200:
+        if user_response.status_code == 403:
+            if 'rate limit' in user_response.json()['message']:
+                raise EPTestingException('Rate limit somehow exceeded, weird!')
+            raise EPTestingException('Permission issue when calling Github API')
+        elif user_response.status_code != 200:
             raise EPTestingException('Invalid call to Github API -- check GITHUB_TOKEN validity')
         self._my_print('Executing download operations as Github user: ' + user_response.json()['login'])
         this_platform = platform.system()
@@ -94,14 +98,18 @@ class Downloader:
         ))
 
     @staticmethod
-    def _sanitize_next_page_url(next_page_url: str) -> str:
+    def _sanitize_next_page_url(next_page_url: str) -> Union[str, None]:
         if next_page_url[0] != '<':
             # only sanitize the next pagers with the braces
             return next_page_url
-        braced_url = next_page_url.split(';')[0]
-        remove_first_brace = braced_url[1:]
-        remove_last_brace = remove_first_brace[:-1]
-        return remove_last_brace
+        links = next_page_url.split(',')
+        for link in links:
+            if 'rel=\"next\"' in link:
+                braced_url = link.split(';')[0].strip()
+                remove_first_brace = braced_url[1:]
+                remove_last_brace = remove_first_brace[:-1]
+                return remove_last_brace
+        return None
 
     def _find_matching_asset_for_release(self, release: dict) -> dict:
         asset_url = release['assets_url']
