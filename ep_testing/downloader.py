@@ -50,6 +50,8 @@ class Downloader:
         releases = self._get_all_packages()
         matching_release = self._find_matching_release(releases)
         asset = self._find_matching_asset_for_release(matching_release)
+        if asset is None:
+            raise EPTestingException('Could not find asset to download, has CI finished it yet?')
         self.download_path = os.path.join(config.download_dir, target_file_name)
         if config.skip_download:
             if not os.path.exists(self.download_path):
