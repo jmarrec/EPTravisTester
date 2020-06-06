@@ -20,7 +20,10 @@ class TestPlainDDRunEPlusFile(BaseTest):
         dev_null = open(os.devnull, 'w')
         if 'binary_sym_link' in kwargs:
             eplus_binary_to_use = os.path.join(os.getcwd(), 'ep_symlink')
-            print("Making symlink at " + eplus_binary_to_use)
+            if verbose:
+                print(f' [SYM-LINKED at {eplus_binary_to_use}]', end='')
+            else:
+                print(' [SYM-LINKED]', end='')
             os.symlink(eplus_binary, eplus_binary_to_use)
         else:
             eplus_binary_to_use = eplus_binary
