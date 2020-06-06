@@ -33,6 +33,9 @@ class Tester:
         TransitionOldFile().run(
             self.install_path, self.verbose, {'last_version': self.config.tag_last_version}
         )
+        TestPlainDDRunEPlusFile().run(
+            self.install_path, self.verbose, {'test_file': '1ZoneUncontrolled.idf', 'binary_sym_link': True}
+        )
         # linking to DLL at build time and delayed works on all platforms
         TestCAPIAccess().run(
             self.install_path, self.verbose, {}
