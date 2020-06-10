@@ -5,10 +5,10 @@ from tempfile import mkdtemp
 class TestConfiguration:
 
     def __init__(self):
-        self.this_version = '9.3'
-        self.tag_this_version = 'v9.3.0-BugFix'
-        self.last_version = '9.2'
-        self.tag_last_version = 'v9.2.0'
+        self.this_version = '9.4'
+        self.tag_this_version = 'v9.4.0-TestSymlinkFix'
+        self.last_version = '9.3'
+        self.tag_last_version = 'v9.3.0'
 
         # If this is turned on, it expects to find an asset named target_file_name in the download_dir
         self.skip_download = True
