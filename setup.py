@@ -19,7 +19,7 @@ class Runner(distutils.cmd.Command):
         pass
 
     def run(self):
-        verbose = True
+        verbose = False
         c = TestConfiguration()
         self.announce('Attempting to test tag name: %s' % c.tag_this_version, level=distutils.log.INFO)
         d = Downloader(c, self.announce)

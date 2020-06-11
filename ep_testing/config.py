@@ -14,7 +14,7 @@ class TestConfiguration:
 
         # If this is turned on, it expects to find an asset named target_file_name in the download_dir
         self.skip_download = True
-        self.skipped_download_file = '/eplus/repos/6eplus/builds/r/EnergyPlus-9.4.0-7def4cec5e-Linux-x86_64.tar.gz'
+        self.skipped_download_file = '/var/folders/1b/glc4bp3s2s52xb8vdgsj4qsw5dydhj/T/tmpy9_mlk48/ep.tar.gz'
 
         # But if we are on Travis, we override it to always download a new asset
         if os.environ.get('TRAVIS'):
