@@ -18,8 +18,17 @@ class TestPlainDDRunEPlusFile(BaseTest):
         eplus_binary = os.path.join(install_root, 'energyplus')
         idf_path = os.path.join(install_root, 'ExampleFiles', test_file)
         dev_null = open(os.devnull, 'w')
+        if 'binary_sym_link' in kwargs:
+            eplus_binary_to_use = os.path.join(os.getcwd(), 'ep_symlink')
+            if verbose:
+                print(f' [SYM-LINKED at {eplus_binary_to_use}]', end='')
+            else:
+                print(' [SYM-LINKED]', end='')
+            os.symlink(eplus_binary, eplus_binary_to_use)
+        else:
+            eplus_binary_to_use = eplus_binary
         try:
-            check_call([eplus_binary, '-D', idf_path], stdout=dev_null, stderr=STDOUT)
+            check_call([eplus_binary_to_use, '-D', idf_path], stdout=dev_null, stderr=STDOUT)
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('EnergyPlus failed!')

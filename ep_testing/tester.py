@@ -33,19 +33,20 @@ class Tester:
         TransitionOldFile().run(
             self.install_path, self.verbose, {'last_version': self.config.tag_last_version}
         )
-        # linking to DLL at build time and delayed works on all platforms
+        if system() == 'Windows':
+            if self.verbose:
+                print("Symlink runs are not testable on Travis, I think the user doesn't have symlink privilege.")
+        else:
+            TestPlainDDRunEPlusFile().run(
+                self.install_path, self.verbose, {'test_file': '1ZoneUncontrolled.idf', 'binary_sym_link': True}
+            )
         TestCAPIAccess().run(
             self.install_path, self.verbose, {}
         )
         TestCppAPIDelayedAccess().run(
             self.install_path, self.verbose, {}
         )
-        # Python may have trouble on Mac for right now, but should be able to work on Windows and Linux
-        if system() == 'Linux' or system() == 'Windows':
-            TestPythonAPIAccess().run(
-                self.install_path, self.verbose, {}
-            )
-        else:
-            if self.verbose:
-                print("Running Python API Linux and Windows ONLY until we get the @executable_path resolved on Mac")
+        TestPythonAPIAccess().run(
+            self.install_path, self.verbose, {}
+        )
         os.chdir(saved_path)
