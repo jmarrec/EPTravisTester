@@ -56,14 +56,8 @@ for t in [5.0, 15.0, 25.0]:
                 py = 'python3'
             elif platform.system() == 'Darwin':
                 py = '/usr/local/bin/python3'
-                if os.path.exists(py):
-                    print("PYYHON EXISTS!!")
-                else:
-                    print("PYTHON DONT EXIST!!!")
-                if os.path.exists(python_file_path):
-                    print("FILE EXISTS!!")
-                else:
-                    print("FILE DONT EXIST!!")
+                with open(python_file_path) as f:
+                    print(f.read())
             else:  # windows
                 py = 'C:\\Python36\\Python.exe'
             my_check_call(self.verbose, [py, "--version"])  # python_file_path])
