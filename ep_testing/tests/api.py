@@ -51,8 +51,6 @@ for t in [5.0, 15.0, 25.0]:
                 py = 'python3'
             elif platform.system() == 'Darwin':
                 py = '/usr/local/bin/python3'
-                with open(python_file_path) as f:
-                    print(f.read())
             else:  # windows
                 py = 'C:\\Python36\\Python.exe'
             my_check_call(self.verbose, [py, python_file_path])
