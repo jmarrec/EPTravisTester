@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 sys.path.insert(0, '%s')
-from pyenergyplus.api import EnergyPlusAPI
+from pyenergyplus.api import EnergyPlusAPI  # noqa: E402
 api = EnergyPlusAPI()
 state = api.state_manager.new_state()
 glycol = api.functional.glycol(state, u"water")
