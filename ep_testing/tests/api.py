@@ -30,18 +30,13 @@ class TestPythonAPIAccess(BaseTest):
 #!/usr/bin/env python3
 import sys
 sys.path.insert(0, '%s')
-print(sys.path)
 from pyenergyplus.api import EnergyPlusAPI
 api = EnergyPlusAPI()
-print('Got api instance!')
 state = api.state_manager.new_state()
-print('Got state instance')
 glycol = api.functional.glycol(state, u"water")
-print('Got glycol instance')
 for t in [5.0, 15.0, 25.0]:
     cp = glycol.specific_heat(state, t)
     rho = glycol.density(state, t)
-    print('Got properties')
         """ % install_root
 
     def run(self, install_root: str, verbose: bool, kwargs: dict):
