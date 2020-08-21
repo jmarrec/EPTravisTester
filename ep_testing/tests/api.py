@@ -32,10 +32,11 @@ import sys
 sys.path.insert(0, '%s')
 from pyenergyplus.api import EnergyPlusAPI
 api = EnergyPlusAPI()
-glycol = api.functional.glycol(u"water")
+state = api.state_manager.new_state()
+glycol = api.functional.glycol(state, u"water")
 for t in [5.0, 15.0, 25.0]:
-    cp = glycol.specific_heat(t)
-    rho = glycol.density(t)
+    cp = glycol.specific_heat(state, t)
+    rho = glycol.density(state, t)
         """ % install_root
 
     def run(self, install_root: str, verbose: bool, kwargs: dict):
@@ -136,17 +137,19 @@ endif()
         return """
 #include <stddef.h>
 #include <stdio.h>
+#include <EnergyPlus/api/state.h>
 #include <EnergyPlus/api/func.h>
 int main() {
-    initializeFunctionalAPI();
+    EnergyPlusState state = stateNew();
+    initializeFunctionalAPI(state);
     Glycol glycol = NULL;
-    glycol = glycolNew("WatEr");
+    glycol = glycolNew(state, "WatEr");
     for (int temp=5; temp<35; temp+=10) {
         Real64 thisTemp = (float)temp;
-        Real64 specificHeat = glycolSpecificHeat(glycol, thisTemp);
+        Real64 specificHeat = glycolSpecificHeat(state, glycol, thisTemp);
         printf("Cp = %8.3f\\n", specificHeat);
     }
-    glycolDelete(glycol);
+    glycolDelete(state, glycol);
     printf("Hello, world!\\n");
 }
         """
