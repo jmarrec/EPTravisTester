@@ -60,7 +60,7 @@ for t in [5.0, 15.0, 25.0]:
                     print(f.read())
             else:  # windows
                 py = 'C:\\Python36\\Python.exe'
-            my_check_call(self.verbose, [py, "--version"])  # python_file_path])
+            my_check_call(self.verbose, [py, python_file_path])
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('Python API Wrapper Script failed!')
