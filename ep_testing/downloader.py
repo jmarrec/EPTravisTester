@@ -34,6 +34,7 @@ class Downloader:
         this_platform = platform.system()
         extract_dir_name = 'ep_package'
         self.extract_path = os.path.join(config.download_dir, extract_dir_name)
+        # need to adapt this to the new filename structure when we get there
         if this_platform == 'Linux':
             self.asset_pattern = 'Linux-x86_64.tar.gz'
             target_file_name = 'ep.tar.gz'
