@@ -60,6 +60,10 @@ for t in [5.0, 15.0, 25.0]:
                     print("PYYHON EXISTS!!")
                 else:
                     print("PYTHON DONT EXIST!!!")
+                if os.path.exists(python_file_path):
+                    print("FILE EXISTS!!")
+                else:
+                    print("FILE DONT EXIST!!")
             else:  # windows
                 py = 'C:\\Python36\\Python.exe'
             my_check_call(self.verbose, [py, "--version"])  # python_file_path])
