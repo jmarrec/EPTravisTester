@@ -8,13 +8,13 @@ class TestConfiguration:
 
     def __init__(self):
         self.this_version = '9.4'
-        self.tag_this_version = 'v9.4.0-TestSymlinkFix2'
+        self.tag_this_version = 'v9.4.0-IOFreeze-RC1'
         self.last_version = '9.3'
         self.tag_last_version = 'v9.3.0'
 
         # If this is turned on, it expects to find an asset named target_file_name in the download_dir
         self.skip_download = True
-        self.skipped_download_file = '/var/folders/1b/glc4bp3s2s52xb8vdgsj4qsw5dydhj/T/tmpy9_mlk48/ep.tar.gz'
+        self.skipped_download_file = '/tmp/ep.tar.gz'
 
         # But if we are on Travis, we override it to always download a new asset
         if os.environ.get('TRAVIS'):

@@ -8,6 +8,13 @@ from ep_testing.exceptions import EPTestingException
 from ep_testing.tests.base import BaseTest
 
 
+def api_resource_dir() -> str:
+    this_file_path = os.path.realpath(__file__)
+    this_directory = os.path.dirname(this_file_path)
+    templates_dir = os.path.join(this_directory, 'api_templates')
+    return templates_dir
+
+
 def my_check_call(verbose: bool, command_line: List[str], **kwargs) -> None:
     if verbose:
         check_call(command_line, **kwargs)
@@ -26,17 +33,9 @@ class TestPythonAPIAccess(BaseTest):
             pass
         else:  # windows
             install_root = install_root.replace('\\', '\\\\')
-        return """
-#!/usr/bin/env python3
-import sys
-sys.path.insert(0, '%s')
-from pyenergyplus.api import EnergyPlusAPI
-api = EnergyPlusAPI()
-glycol = api.functional.glycol(u"water")
-for t in [5.0, 15.0, 25.0]:
-    cp = glycol.specific_heat(t)
-    rho = glycol.density(t)
-        """ % install_root
+        template_file = os.path.join(api_resource_dir(), 'python_link.py')
+        template = open(template_file).read()
+        return template % install_root
 
     def run(self, install_root: str, verbose: bool, kwargs: dict):
         self.verbose = verbose
@@ -90,16 +89,9 @@ class TestCAPIAccess(BaseTest):
 
     @staticmethod
     def _api_fixup_content() -> str:
-        return """
-include(GetPrerequisites)
-get_prerequisites(${TARGET_PATH} PR 0 0 "" "")
-foreach(P IN LISTS PR)
-    string(FIND ${P} "energyplus" EPFOUND)
-    if (NOT EPFOUND EQUAL -1)
-        execute_process(COMMAND install_name_tool -change ${P} "${DLL_PATH}" ${TARGET_PATH})
-    endif()
-endforeach()
-        """
+        template_file = os.path.join(api_resource_dir(), 'eager_cpp_fixup.txt')
+        template = open(template_file).read()
+        return template
 
     def _api_cmakelists_content(self, install_path: str) -> str:
         if platform.system() == 'Linux':
@@ -109,47 +101,18 @@ endforeach()
         else:  # windows
             lib_file_name = 'energyplusapi.lib'
             install_path = install_path.replace('\\', '\\\\')
-        return """
-cmake_minimum_required(VERSION 3.10)
-project({TARGET_NAME})
-include_directories("{EPLUS_INSTALL_NO_SLASH}/include")
-add_executable({TARGET_NAME} {SOURCE_FILE})
-set(DLL_PATH "{EPLUS_INSTALL_NO_SLASH}/{LIB_FILE_NAME}")
-target_link_libraries({TARGET_NAME} ${{DLL_PATH}})
-if (APPLE)
-    add_custom_command(
-        TARGET TestCAPIAccess POST_BUILD
-        COMMAND
-            ${{CMAKE_COMMAND}}
-            -DDLL_PATH=${{DLL_PATH}} -DTARGET_PATH=$<TARGET_FILE:{TARGET_NAME}>
-            -P "${{CMAKE_SOURCE_DIR}}/fixup.cmake"
-        DEPENDS "${{CMAKE_SOURCE_DIR}}/fixup.cmake"
-    )
-endif()
-        """.format(
+        template_file = os.path.join(api_resource_dir(), 'eager_cpp_cmakelists.txt')
+        template = open(template_file).read()
+        return template.format(
             EPLUS_INSTALL_NO_SLASH=install_path, LIB_FILE_NAME=lib_file_name,
             TARGET_NAME=self.target_name, SOURCE_FILE=self.source_file_name
         )
 
     @staticmethod
     def _api_script_content() -> str:
-        return """
-#include <stddef.h>
-#include <stdio.h>
-#include <EnergyPlus/api/func.h>
-int main() {
-    initializeFunctionalAPI();
-    Glycol glycol = NULL;
-    glycol = glycolNew("WatEr");
-    for (int temp=5; temp<35; temp+=10) {
-        Real64 thisTemp = (float)temp;
-        Real64 specificHeat = glycolSpecificHeat(glycol, thisTemp);
-        printf("Cp = %8.3f\\n", specificHeat);
-    }
-    glycolDelete(glycol);
-    printf("Hello, world!\\n");
-}
-        """
+        template_file = os.path.join(api_resource_dir(), 'eager_cpp_source.cpp')
+        template = open(template_file).read()
+        return template
 
     def run(self, install_root: str, verbose: bool, kwargs: dict):
         self.verbose = verbose
@@ -193,12 +156,9 @@ class TestCppAPIDelayedAccess(BaseTest):
         return 'Test running an API script against energyplus in C++ but with delayed DLL loading'
 
     def _api_cmakelists_content(self) -> str:
-        return """
-cmake_minimum_required(VERSION 3.10)
-project({TARGET_NAME})
-add_executable({TARGET_NAME} {SOURCE_FILE})
-target_link_libraries({TARGET_NAME} ${{CMAKE_DL_LIBS}})
-        """.format(TARGET_NAME=self.target_name, SOURCE_FILE=self.source_file_name)
+        template_file = os.path.join(api_resource_dir(), 'delayed_cpp_cmakelists.txt')
+        template = open(template_file).read()
+        return template.format(TARGET_NAME=self.target_name, SOURCE_FILE=self.source_file_name)
 
     @staticmethod
     def _api_script_content(install_path: str) -> str:
@@ -208,61 +168,17 @@ target_link_libraries({TARGET_NAME} ${{CMAKE_DL_LIBS}})
             lib_file_name = '/libenergyplusapi.dylib'
         else:  # windows
             raise EPTestingException('Dont call TestCAPIDelayedAccess._api_script_content for Windows')
-        return """
-#include <iostream>
-#include <dlfcn.h>
-int main() {
-    std::cout << "Opening eplus shared library...\\n";
-    void* handle = dlopen("{EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME}", RTLD_LAZY);
-    if (!handle) {
-        std::cerr << "Cannot open library: \\n";
-        return 1;
-    }
-    dlerror(); // reset errors
-    std::cout << "Loading init function symbol...\\n";
-    typedef void (*init_t)();
-    init_t init = (init_t) dlsym(handle, "initializeFunctionalAPI");
-    const char *dlsym_error = dlerror();
-    if (dlsym_error) {
-        std::cerr << "Cannot load symbol 'initializeFunctionalAPI': \\n";
-        dlclose(handle);
-        return 1;
-    }
-    std::cout << "Calling to initialize...\\n";
-    init();
-    std::cout << "Closing library...\\n";
-    dlclose(handle);
-}
-        """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
+        template_file = os.path.join(api_resource_dir(), 'delayed_cpp_source_linux_mac.cpp')
+        template = open(template_file).read()
+        return template.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
 
     @staticmethod
     def _api_script_content_windows(install_path: str) -> str:
         lib_file_name = '\\\\energyplusapi.dll'
         install_path = install_path.replace('\\', '\\\\')
-        return """
-#include <windows.h>
-#include <iostream>
-int main() {
-    std::cout << "Opening eplus shared library...\\n";
-    HINSTANCE hInst;
-    hInst = LoadLibrary("{EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME}");
-    if (!hInst) {
-        std::cerr << "Cannot open library: \\n";
-        return 1;
-    }
-    typedef void (*INITFUNCTYPE)();
-    INITFUNCTYPE init;
-    init = (INITFUNCTYPE)GetProcAddress((HINSTANCE)hInst, "initializeFunctionalAPI");
-    if (!init) {
-        std::cerr << "Cannot get function \\n";
-        return 1;
-    }
-    std::cout << "Calling to initialize\\n";
-    init();
-    std::cout << "Closing library\\n";
-    FreeLibrary((HINSTANCE)hInst);
-}
-        """.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
+        template_file = os.path.join(api_resource_dir(), 'delayed_cpp_source_windows.cpp')
+        template = open(template_file).read()
+        return template.replace('{EPLUS_INSTALL_NO_SLASH}', install_path).replace('{LIB_FILE_NAME}', lib_file_name)
 
     def run(self, install_root: str, verbose: bool, kwargs: dict):
         self.verbose = verbose
