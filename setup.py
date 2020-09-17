@@ -3,24 +3,34 @@ import distutils.log
 from setuptools import setup
 from ep_testing.downloader import Downloader
 from ep_testing.tester import Tester
-from ep_testing.config import TestConfiguration
+from ep_testing.config import TestConfiguration, CONFIGURATIONS
 
 
 class Runner(distutils.cmd.Command):
-    """A custom command to run E+ tests using `setup.py run`"""
+    """A custom command to run E+ tests using `setup.py run --run_config <key>`"""
 
     description = 'Run E+ tests on installers for this platform'
-    user_options = []
+    user_options = [
+        # The format is (long option, short option, description).
+        ('run-config=', None, 'Run configuration, see possible options in config.py'),
+    ]
+
+    def __init__(self, dist):
+        super().__init__(dist)
+        self.run_config = None
 
     def initialize_options(self):
-        pass
+        ...
 
     def finalize_options(self):
-        pass
+        if self.run_config is None:
+            raise Exception("Parameter --run_config is missing")
+        if self.run_config not in CONFIGURATIONS:
+            raise Exception("Parameter --run_config has invalid value, see options in config.py")
 
     def run(self):
         verbose = False
-        c = TestConfiguration()
+        c = TestConfiguration(self.run_config)
         self.announce('Attempting to test tag name: %s' % c.tag_this_version, level=distutils.log.INFO)
         d = Downloader(c, self.announce)
         self.announce('EnergyPlus package extracted to: ' + d.extracted_install_path(), level=distutils.log.INFO)
@@ -30,10 +40,10 @@ class Runner(distutils.cmd.Command):
 
 
 setup(
-    name='EPTravisTester',
-    version='0.1',
+    name='EPSanityTester',
+    version='0.2',
     packages=['ep_testing'],
-    url='github.com/nrel/energyplus',
+    url='github.com/NREL/EnergyPlus',
     license='',
     author='edwin',
     author_email='',

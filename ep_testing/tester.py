@@ -1,8 +1,7 @@
 import os
-from platform import system
 from tempfile import mkdtemp
 
-from ep_testing.config import TestConfiguration
+from ep_testing.config import TestConfiguration, OS
 from ep_testing.tests.api import TestPythonAPIAccess, TestCAPIAccess, TestCppAPIDelayedAccess
 from ep_testing.tests.energyplus import TestPlainDDRunEPlusFile
 from ep_testing.tests.expand_objects import TestExpandObjectsAndRun
@@ -33,7 +32,7 @@ class Tester:
         TransitionOldFile().run(
             self.install_path, self.verbose, {'last_version': self.config.tag_last_version}
         )
-        if system() == 'Windows':
+        if self.config.os == OS.Windows:
             if self.verbose:
                 print("Symlink runs are not testable on Travis, I think the user doesn't have symlink privilege.")
         else:
