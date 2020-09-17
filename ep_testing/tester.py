@@ -40,10 +40,10 @@ class Tester:
                 self.install_path, self.verbose, {'test_file': '1ZoneUncontrolled.idf', 'binary_sym_link': True}
             )
         TestCAPIAccess().run(
-            self.install_path, self.verbose, {}
+            self.install_path, self.verbose, {'os': self.config.os, 'bitness': self.config.bitness}
         )
         TestCppAPIDelayedAccess().run(
-            self.install_path, self.verbose, {}
+            self.install_path, self.verbose, {'os': self.config.os, 'bitness': self.config.bitness}
         )
         TestPythonAPIAccess().run(
             self.install_path, self.verbose, {}
