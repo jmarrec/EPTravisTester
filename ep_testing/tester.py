@@ -45,7 +45,11 @@ class Tester:
         TestCppAPIDelayedAccess().run(
             self.install_path, self.verbose, {'os': self.config.os, 'bitness': self.config.bitness}
         )
-        TestPythonAPIAccess().run(
-            self.install_path, self.verbose, {}
-        )
+        if self.config.bitness == 'x32':
+            if self.verbose:
+                print("Travis does not have a 32-bit Python package readily available")
+        else:
+            TestPythonAPIAccess().run(
+                self.install_path, self.verbose, {}
+            )
         os.chdir(saved_path)
