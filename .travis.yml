@@ -19,12 +19,12 @@ jobs:
     name: Mac 10.13 E+ Tests
     osx_image: xcode10.1
     before_script: pip3 install -r requirements.txt
-    script: python3 setup.py run --run-config mac1013  # TODO: Use 10.15 as well
-#  - os: osx
-#    name: Mac 10.15 E+ Tests
-#    osx_image: xcode11.4
-#    before_script: pip3 install -r requirements.txt
-#    script: python3 setup.py run --run-config mac1015
+    script: python3 setup.py run --run-config mac1013
+  - os: osx
+    name: Mac 10.15 E+ Tests
+    osx_image: xcode11.4
+    before_script: pip3 install -r requirements.txt
+    script: python3 setup.py run --run-config mac1015
   - os: windows
     language: cpp
     name: Windows 32-bit E+ Tests
