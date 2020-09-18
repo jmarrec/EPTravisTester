@@ -29,7 +29,7 @@ class TestConfiguration:
         self.bitness = CONFIGURATIONS[run_config_key]['bitness']
 
         self.this_version = '9.4'
-        self.tag_this_version = 'TestActionPackageBuilding7'
+        self.tag_this_version = 'TestActionPackageBuilding8'
         self.last_version = '9.3'
         self.tag_last_version = 'v9.3.0'
 
