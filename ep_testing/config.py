@@ -13,7 +13,7 @@ CONFIGURATIONS = {
     'ubuntu1804': {'os': OS.Linux, 'bitness': 'x64', 'asset_pattern': 'Linux-Ubuntu18.04-x86_64.tar.gz'},
     'ubuntu2004': {'os': OS.Linux, 'bitness': 'x64', 'asset_pattern': 'Linux-Ubuntu20.04-x86_64.tar.gz'},
     'mac1013': {'os': OS.Mac, 'bitness': 'x64', 'asset_pattern': 'Darwin-macOS10.13-x86_64.tar.gz'},
-    'mac1015': {'os': OS.Mac, 'bitness': 'x64', 'asset_pattern': 'Darwin-macOS10.15-x86_64.tar.gz'},
+    'mac1015': {'os': OS.Mac, 'bitness': 'x64', 'asset_pattern': 'Darwin-macOS10.13-x86_64.tar.gz'},  # test 10.13 on 10.15
     'win32': {'os': OS.Windows, 'bitness': 'x32', 'asset_pattern': 'Windows-i386.zip'},
     'win64': {'os': OS.Windows, 'bitness': 'x64', 'asset_pattern': 'Windows-x86_64.zip'},
 }
@@ -29,7 +29,7 @@ class TestConfiguration:
         self.bitness = CONFIGURATIONS[run_config_key]['bitness']
 
         self.this_version = '9.4'
-        self.tag_this_version = 'TestActionPackageBuilding8'
+        self.tag_this_version = 'v9.4.0-RC2'
         self.last_version = '9.3'
         self.tag_last_version = 'v9.3.0'
 
