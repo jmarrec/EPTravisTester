@@ -3,7 +3,7 @@
 int main() {
     std::cout << "Opening eplus shared library...\\n";
     HINSTANCE hInst;
-    hInst = LoadLibrary("{EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME}");
+    hInst = LoadLibraryEx("{EPLUS_INSTALL_NO_SLASH}{LIB_FILE_NAME}", NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
     if (!hInst) {
         std::cerr << "Cannot open library: \\n";
         return 1;
