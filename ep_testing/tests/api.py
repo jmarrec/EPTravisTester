@@ -224,8 +224,11 @@ class TestCppAPIDelayedAccess(BaseTest):
             built_binary_path = os.path.join(cmake_build_dir, 'Release', 'TestCAPIAccess')
         else:
             built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
+        my_env = os.environ.copy()
+        if self.os == OS.Windows:  # my local comp didn't have cmake in path except in interact shells
+            my_env["PATH"] = install_root + ";" + my_env["PATH"]
         try:
-            my_check_call(self.verbose, [built_binary_path])
+            my_check_call(self.verbose, [built_binary_path], env=my_env)
         except CalledProcessError:
             print("Delayed C API Wrapper execution failed")
             raise
