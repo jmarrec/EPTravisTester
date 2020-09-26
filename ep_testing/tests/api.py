@@ -60,10 +60,6 @@ class TestPythonAPIAccess(BaseTest):
                 py = '/usr/local/bin/python3'
             else:  # windows
                 py = 'C:\\Python36\\Python.exe'
-            if os.path.exists(py):
-                print(' [PYTHON EXISTS] ', end='')
-            else:
-                print(' [PYTHON MISSING] ', end='')
             my_env = os.environ.copy()
             if self.os == OS.Windows:  # my local comp didn't have cmake in path except in interact shells
                 my_env["PATH"] = install_root + ";" + my_env["PATH"]
