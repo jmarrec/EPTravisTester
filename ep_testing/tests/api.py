@@ -39,7 +39,7 @@ class TestPythonAPIAccess(BaseTest):
         return template % install_root
 
     def run(self, install_root: str, verbose: bool, kwargs: dict):
-        self.verbose = verbose
+        self.verbose = True  # verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         handle, python_file_path = mkstemp(suffix='.py')
         with os.fdopen(handle, 'w') as f:
@@ -52,6 +52,10 @@ class TestPythonAPIAccess(BaseTest):
                 py = '/usr/local/bin/python3'
             else:  # windows
                 py = 'C:\\Python36\\Python.exe'
+            if os.path.exists(py):
+                print(' [PYTHON EXISTS] ', end='')
+            else:
+                print(' [PYTHON MISSING] ', end='')
             my_check_call(self.verbose, [py, python_file_path])
             print(' [DONE]!')
         except CalledProcessError:
