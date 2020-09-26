@@ -50,6 +50,6 @@ class Tester:
                 print("Travis does not have a 32-bit Python package readily available")
         else:
             TestPythonAPIAccess().run(
-                self.install_path, self.verbose, {}
+                self.install_path, self.verbose, {'os': self.config.os}
             )
         os.chdir(saved_path)

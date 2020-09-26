@@ -25,6 +25,11 @@ def my_check_call(verbose: bool, command_line: List[str], **kwargs) -> None:
 
 
 class TestPythonAPIAccess(BaseTest):
+
+    def __init__(self):
+        super().__init__()
+        self.os = None
+
     def name(self):
         return 'Test running an API script against pyenergyplus'
 
@@ -41,6 +46,9 @@ class TestPythonAPIAccess(BaseTest):
     def run(self, install_root: str, verbose: bool, kwargs: dict):
         self.verbose = True  # verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
+        if 'os' not in kwargs:
+            raise EPTestingException('Bad call to %s -- must pass os in kwargs' % self.__class__.__name__)
+        self.os = kwargs['os']
         handle, python_file_path = mkstemp(suffix='.py')
         with os.fdopen(handle, 'w') as f:
             f.write(self._api_script_content(install_root))
@@ -56,7 +64,10 @@ class TestPythonAPIAccess(BaseTest):
                 print(' [PYTHON EXISTS] ', end='')
             else:
                 print(' [PYTHON MISSING] ', end='')
-            my_check_call(self.verbose, [py, python_file_path])
+            my_env = os.environ.copy()
+            if self.os == OS.Windows:  # my local comp didn't have cmake in path except in interact shells
+                my_env["PATH"] = install_root + ";" + my_env["PATH"]
+            my_check_call(self.verbose, [py, python_file_path], env=my_env)
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('Python API Wrapper Script failed!')
