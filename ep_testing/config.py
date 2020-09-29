@@ -12,7 +12,7 @@ class OS:
 CONFIGURATIONS = {
     'ubuntu1804': {'os': OS.Linux, 'bitness': 'x64', 'asset_pattern': 'Linux-Ubuntu18.04-x86_64.tar.gz'},
     'ubuntu2004': {'os': OS.Linux, 'bitness': 'x64', 'asset_pattern': 'Linux-Ubuntu20.04-x86_64.tar.gz'},
-    'mac1013': {'os': OS.Mac, 'bitness': 'x64', 'asset_pattern': 'Darwin-macOS10.15-x86_64.tar.gz'},  # 10.13 on 10.15
+    'mac1014': {'os': OS.Mac, 'bitness': 'x64', 'asset_pattern': 'Darwin-macOS10.15-x86_64.tar.gz'},  # 10.15 on 10.14
     'mac1015': {'os': OS.Mac, 'bitness': 'x64', 'asset_pattern': 'Darwin-macOS10.15-x86_64.tar.gz'},  # 10.15 on 10.15
     'win32': {'os': OS.Windows, 'bitness': 'x32', 'asset_pattern': 'Windows-i386.zip'},
     'win64': {'os': OS.Windows, 'bitness': 'x64', 'asset_pattern': 'Windows-x86_64.zip'},
