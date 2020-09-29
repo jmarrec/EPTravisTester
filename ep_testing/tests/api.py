@@ -44,7 +44,7 @@ class TestPythonAPIAccess(BaseTest):
         return template % install_root
 
     def run(self, install_root: str, verbose: bool, kwargs: dict):
-        self.verbose = True  # verbose
+        self.verbose = verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
         if 'os' not in kwargs:
             raise EPTestingException('Bad call to %s -- must pass os in kwargs' % self.__class__.__name__)
