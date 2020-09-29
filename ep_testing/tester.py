@@ -33,8 +33,7 @@ class Tester:
             self.install_path, self.verbose, {'last_version': self.config.tag_last_version}
         )
         if self.config.os == OS.Windows:
-            if self.verbose:
-                print("Symlink runs are not testable on Travis, I think the user doesn't have symlink privilege.")
+            print("Windows Symlink runs are not testable on Travis, I think the user needs symlink privilege.")
         else:
             TestPlainDDRunEPlusFile().run(
                 self.install_path, self.verbose, {'test_file': '1ZoneUncontrolled.idf', 'binary_sym_link': True}
@@ -46,8 +45,9 @@ class Tester:
             self.install_path, self.verbose, {'os': self.config.os, 'bitness': self.config.bitness}
         )
         if self.config.bitness == 'x32':
-            if self.verbose:
-                print("Travis does not have a 32-bit Python package readily available")
+            print("Travis does not have a 32-bit Python package readily available, so not testing Python API")
+        elif self.config.os == OS.Mac and self.config.os_version == '10.14':
+            print("E+ technically supports 10.15, but most things work on 10.14. Not Python API though, skipping that.")
         else:
             TestPythonAPIAccess().run(
                 self.install_path, self.verbose, {'os': self.config.os}
