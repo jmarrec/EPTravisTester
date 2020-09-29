@@ -1,8 +1,7 @@
 import os
-from platform import system
 from tempfile import mkdtemp
 
-from ep_testing.config import TestConfiguration
+from ep_testing.config import TestConfiguration, OS
 from ep_testing.tests.api import TestPythonAPIAccess, TestCAPIAccess, TestCppAPIDelayedAccess
 from ep_testing.tests.energyplus import TestPlainDDRunEPlusFile
 from ep_testing.tests.expand_objects import TestExpandObjectsAndRun
@@ -33,20 +32,24 @@ class Tester:
         TransitionOldFile().run(
             self.install_path, self.verbose, {'last_version': self.config.tag_last_version}
         )
-        if system() == 'Windows':
-            if self.verbose:
-                print("Symlink runs are not testable on Travis, I think the user doesn't have symlink privilege.")
+        if self.config.os == OS.Windows:
+            print("Windows Symlink runs are not testable on Travis, I think the user needs symlink privilege.")
         else:
             TestPlainDDRunEPlusFile().run(
                 self.install_path, self.verbose, {'test_file': '1ZoneUncontrolled.idf', 'binary_sym_link': True}
             )
         TestCAPIAccess().run(
-            self.install_path, self.verbose, {}
+            self.install_path, self.verbose, {'os': self.config.os, 'bitness': self.config.bitness}
         )
         TestCppAPIDelayedAccess().run(
-            self.install_path, self.verbose, {}
+            self.install_path, self.verbose, {'os': self.config.os, 'bitness': self.config.bitness}
         )
-        TestPythonAPIAccess().run(
-            self.install_path, self.verbose, {}
-        )
+        if self.config.bitness == 'x32':
+            print("Travis does not have a 32-bit Python package readily available, so not testing Python API")
+        elif self.config.os == OS.Mac and self.config.os_version == '10.14':
+            print("E+ technically supports 10.15, but most things work on 10.14. Not Python API though, skipping that.")
+        else:
+            TestPythonAPIAccess().run(
+                self.install_path, self.verbose, {'os': self.config.os}
+            )
         os.chdir(saved_path)

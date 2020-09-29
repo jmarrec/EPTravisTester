@@ -1,14 +1,13 @@
 from distutils import log
 from typing import List, Union
 import os
-import platform
 import requests
 import shutil
 from subprocess import check_call, CalledProcessError
 import urllib.request
 
 from ep_testing.exceptions import EPTestingException
-from ep_testing.config import TestConfiguration
+from ep_testing.config import TestConfiguration, OS
 
 
 class Downloader:
@@ -31,27 +30,22 @@ class Downloader:
         elif user_response.status_code != 200:
             raise EPTestingException('Invalid call to Github API -- check GITHUB_TOKEN validity')
         self._my_print('Executing download operations as Github user: ' + user_response.json()['login'])
-        this_platform = platform.system()
         extract_dir_name = 'ep_package'
         self.extract_path = os.path.join(config.download_dir, extract_dir_name)
         # need to adapt this to the new filename structure when we get there
-        if this_platform == 'Linux':
-            self.asset_pattern = 'Linux-x86_64.tar.gz'
+        self.asset_pattern = config.asset_pattern
+        if config.os == OS.Linux:
             target_file_name = 'ep.tar.gz'
             # tar -xzf ep.tar.gz -C ep_package
             self.extract_command = ['tar', '-xzf', target_file_name, '-C', self.extract_path]
-        elif this_platform == 'Darwin':
-            self.asset_pattern = 'Darwin-x86_64.tar.gz'
+        elif config.os == OS.Mac:
             target_file_name = 'ep.tar.gz'
             # tar -xzf ep.tar.gz -C ep_package
             self.extract_command = ['tar', '-xzf', target_file_name, '-C', self.extract_path]
-        elif this_platform == 'Windows':
-            self.asset_pattern = 'Windows-x86_64.zip'
+        elif config.os == OS.Windows:
             target_file_name = 'ep.zip'
             # 7z x ep.zip -oep_package
             self.extract_command = ['7z.exe', 'x', target_file_name, '-o' + self.extract_path]
-        else:
-            raise EPTestingException('Unknown platform -- ' + this_platform)
         releases = self._get_all_packages()
         matching_release = self._find_matching_release(releases)
         asset = self._find_matching_asset_for_release(matching_release)

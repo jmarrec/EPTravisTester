@@ -4,6 +4,7 @@ from subprocess import check_call, CalledProcessError, STDOUT
 from tempfile import mkdtemp, mkstemp
 from typing import List
 
+from ep_testing.config import OS
 from ep_testing.exceptions import EPTestingException
 from ep_testing.tests.base import BaseTest
 
@@ -24,6 +25,11 @@ def my_check_call(verbose: bool, command_line: List[str], **kwargs) -> None:
 
 
 class TestPythonAPIAccess(BaseTest):
+
+    def __init__(self):
+        super().__init__()
+        self.os = None
+
     def name(self):
         return 'Test running an API script against pyenergyplus'
 
@@ -40,6 +46,9 @@ class TestPythonAPIAccess(BaseTest):
     def run(self, install_root: str, verbose: bool, kwargs: dict):
         self.verbose = verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
+        if 'os' not in kwargs:
+            raise EPTestingException('Bad call to %s -- must pass os in kwargs' % self.__class__.__name__)
+        self.os = kwargs['os']
         handle, python_file_path = mkstemp(suffix='.py')
         with os.fdopen(handle, 'w') as f:
             f.write(self._api_script_content(install_root))
@@ -51,21 +60,29 @@ class TestPythonAPIAccess(BaseTest):
                 py = '/usr/local/bin/python3'
             else:  # windows
                 py = 'C:\\Python36\\Python.exe'
-            my_check_call(self.verbose, [py, python_file_path])
+            my_env = os.environ.copy()
+            if self.os == OS.Windows:  # my local comp didn't have cmake in path except in interact shells
+                my_env["PATH"] = install_root + ";" + my_env["PATH"]
+            my_check_call(self.verbose, [py, python_file_path], env=my_env)
             print(' [DONE]!')
         except CalledProcessError:
             raise EPTestingException('Python API Wrapper Script failed!')
 
 
-def make_build_dir_and_build(cmake_build_dir: str, verbose: bool):
+def make_build_dir_and_build(cmake_build_dir: str, verbose: bool, this_os: int, bitness: str):
     try:
         os.makedirs(cmake_build_dir)
         my_env = os.environ.copy()
-        if platform.system() == 'Darwin':  # my local comp didn't have cmake in path except in interact shells
+        if this_os == OS.Mac:  # my local comp didn't have cmake in path except in interact shells
             my_env["PATH"] = "/usr/local/bin:" + my_env["PATH"]
         command_line = ['cmake', '..']
-        if platform.system() == 'Windows':
-            command_line.extend(['-G', 'Visual Studio 15 Win64'])
+        if this_os == OS.Windows:
+            if bitness == 'x64':
+                command_line.extend(['-G', 'Visual Studio 15 Win64'])
+            elif bitness == 'x32':
+                command_line.extend(['-G', 'Visual Studio 15'])  # defaults to 32
+            else:
+                raise EPTestingException('Bad bitness sent to make_build_dir_and_build')
         my_check_call(verbose, command_line, cwd=cmake_build_dir, env=my_env)
         command_line = ['cmake', '--build', '.']
         if platform.system() == 'Windows':
@@ -81,6 +98,8 @@ class TestCAPIAccess(BaseTest):
 
     def __init__(self):
         super().__init__()
+        self.os = None
+        self.bitness = None
         self.source_file_name = 'func.c'
         self.target_name = 'TestCAPIAccess'
 
@@ -117,6 +136,12 @@ class TestCAPIAccess(BaseTest):
     def run(self, install_root: str, verbose: bool, kwargs: dict):
         self.verbose = verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
+        if 'os' not in kwargs:
+            raise EPTestingException('Bad call to %s -- must pass os in kwargs' % self.__class__.__name__)
+        if 'bitness' not in kwargs:
+            raise EPTestingException('Bad call to %s -- must pass bitness in kwargs' % self.__class__.__name__)
+        self.os = kwargs['os']
+        self.bitness = kwargs['bitness']
         build_dir = mkdtemp()
         c_file_name = self.source_file_name
         c_file_path = os.path.join(build_dir, c_file_name)
@@ -132,10 +157,10 @@ class TestCAPIAccess(BaseTest):
             f.write(self._api_fixup_content())
         print(' [FIXUP CMAKE WRITTEN] ', end='')
         cmake_build_dir = os.path.join(build_dir, 'build')
-        make_build_dir_and_build(cmake_build_dir, self.verbose)
+        make_build_dir_and_build(cmake_build_dir, self.verbose, self.os, self.bitness)
         try:
             new_binary_path = os.path.join(cmake_build_dir, self.target_name)
-            if platform.system() == 'Windows':  # override the path/name for Windows
+            if self.os == OS.Windows:  # override the path/name for Windows
                 new_binary_path = os.path.join(cmake_build_dir, 'Release', self.target_name + '.exe')
             command_line = [new_binary_path]
             my_check_call(self.verbose, command_line, cwd=install_root)
@@ -149,6 +174,8 @@ class TestCppAPIDelayedAccess(BaseTest):
 
     def __init__(self):
         super().__init__()
+        self.os = None
+        self.bitness = None
         self.source_file_name = 'func.cpp'
         self.target_name = 'TestCAPIAccess'
 
@@ -183,6 +210,12 @@ class TestCppAPIDelayedAccess(BaseTest):
     def run(self, install_root: str, verbose: bool, kwargs: dict):
         self.verbose = verbose
         print('* Running test class "%s"... ' % self.__class__.__name__, end='')
+        if 'os' not in kwargs:
+            raise EPTestingException('Bad call to %s -- must pass os in kwargs' % self.__class__.__name__)
+        if 'bitness' not in kwargs:
+            raise EPTestingException('Bad call to %s -- must pass bitness in kwargs' % self.__class__.__name__)
+        self.os = kwargs['os']
+        self.bitness = kwargs['bitness']
         build_dir = mkdtemp()
         c_file_name = 'func.cpp'
         c_file_path = os.path.join(build_dir, c_file_name)
@@ -197,13 +230,16 @@ class TestCppAPIDelayedAccess(BaseTest):
             f.write(self._api_cmakelists_content())
         print(' [CMAKE FILE WRITTEN] ', end='')
         cmake_build_dir = os.path.join(build_dir, 'build')
-        make_build_dir_and_build(cmake_build_dir, self.verbose)
+        make_build_dir_and_build(cmake_build_dir, self.verbose, self.os, self.bitness)
         if platform.system() == 'Windows':
             built_binary_path = os.path.join(cmake_build_dir, 'Release', 'TestCAPIAccess')
         else:
             built_binary_path = os.path.join(cmake_build_dir, 'TestCAPIAccess')
+        my_env = os.environ.copy()
+        if self.os == OS.Windows:  # my local comp didn't have cmake in path except in interact shells
+            my_env["PATH"] = install_root + ";" + my_env["PATH"]
         try:
-            my_check_call(self.verbose, [built_binary_path])
+            my_check_call(self.verbose, [built_binary_path], env=my_env)
         except CalledProcessError:
             print("Delayed C API Wrapper execution failed")
             raise
