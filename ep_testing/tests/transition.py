@@ -1,5 +1,5 @@
 import os
-from subprocess import check_call, CalledProcessError, STDOUT
+import subprocess
 import urllib.request
 
 from ep_testing.exceptions import EPTestingException
@@ -14,6 +14,9 @@ class TransitionOldFile(BaseTest):
     def run(self, install_root: str, verbose: bool, kwargs: dict):
         if 'last_version' not in kwargs:
             raise EPTestingException('Bad call to %s -- must pass last_version in kwargs' % self.__class__.__name__)
+
+        allow_failure = kwargs.get('allow_failure', False)
+
         last_version = kwargs['last_version']
         test_file = kwargs.get('test_file', '1ZoneUncontrolled.idf')
         print('* Running test class "%s" on file "%s"... ' % (self.__class__.__name__, test_file), end='')
@@ -29,23 +32,59 @@ class TransitionOldFile(BaseTest):
         saved_dir = os.getcwd()
         os.chdir(transition_dir)
         idf_path = os.path.join(transition_dir, test_file)
-        dev_null = open(os.devnull, 'w')
         try:
             _, headers = urllib.request.urlretrieve(idf_url, idf_path)
         except Exception as e:
             raise EPTestingException('Could not download file from prior release at %s; error: %s' % (idf_url, str(e)))
+
+        result = subprocess.run([most_recent_binary, os.path.basename(idf_path)],
+                                # capture_output added in python 3.7 only...
+                                # capture_output=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                check=False)
         try:
-            check_call([most_recent_binary, os.path.basename(idf_path)], stdout=dev_null, stderr=STDOUT)
-            print(' [TRANSITIONED] ', end='')
-        except CalledProcessError:
-            raise EPTestingException('Transition failed!')
+            # Throw if failed
+            result.check_returncode()
+            if verbose:
+                print("STDOUT: {}".format(result.stdout.decode('utf-8')))
+                print("STDERR: {}".format(result.stderr.decode('utf-8')))
+            print(' [TRANSITIONED]! ', end='')
+        except subprocess.CalledProcessError:
+            # If it fails, I assume you'd be interested in the stdout&stderr
+            # to be able to diagnose
+            print("STDOUT: {}".format(result.stdout.decode('utf-8')))
+            print("STDERR: {}".format(result.stderr.decode('utf-8')))
+            msg = 'Transition failed!'
+            if not allow_failure:
+                raise EPTestingException(msg)
+            else:
+                print(msg)
+
         os.chdir(install_root)
         eplus_binary = os.path.join(install_root, 'energyplus')
+        result = subprocess.run([eplus_binary, '-D', idf_path],
+                                # capture_output added in python 3.7 only...
+                                # capture_output=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                check=False)
         try:
-            check_call([eplus_binary, '-D', idf_path], stdout=dev_null, stderr=STDOUT)
-            print(' [DONE]!')
-        except CalledProcessError:
-            raise EPTestingException('EnergyPlus failed!')
+            # Throw if failed
+            result.check_returncode()
+            if verbose:
+                print("STDOUT: {}".format(result.stdout.decode('utf-8')))
+                print("STDERR: {}".format(result.stderr.decode('utf-8')))
+            print(' [TRANSITIONED]! ', end='')
+        except subprocess.CalledProcessError:
+            # If it fails, I assume you'd be interested in the stdout&stderr
+            # to be able to diagnose
+            print("STDOUT: {}".format(result.stdout.decode('utf-8')))
+            print("STDERR: {}".format(result.stderr.decode('utf-8')))
+            msg = 'EnergyPlus failed to run Transitionned file!'
+            if not allow_failure:
+                raise EPTestingException(msg)
+            else:
+                print(msg)
+
         os.chdir(saved_dir)
 
 

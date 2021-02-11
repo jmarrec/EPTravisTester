@@ -29,8 +29,17 @@ class Tester:
         TestExpandObjectsAndRun().run(
             self.install_path, self.verbose, {'test_file': 'HVACTemplate-5ZoneFanCoil.idf'}
         )
+        allow_failure = False
+        if self.config.last_version == self.config.this_version:
+            print("Last version in the same as this version, allowing "
+                  "Transition test to fail.")
+            allow_failure = True
         TransitionOldFile().run(
-            self.install_path, self.verbose, {'last_version': self.config.tag_last_version}
+            self.install_path, self.verbose,
+            {
+                'last_version': self.config.tag_last_version,
+                'allow_failure': allow_failure
+            }
         )
         if self.config.os == OS.Windows:
             print("Windows Symlink runs are not testable on Travis, I think the user needs symlink privilege.")
