@@ -28,7 +28,10 @@ class TestPlainDDRunEPlusFile(BaseTest):
             eplus_binary_to_use = eplus_binary
 
         result = subprocess.run([eplus_binary_to_use, '-D', idf_path],
-                                capture_output=True, check=False)
+                                # capture_output added in python 3.7 only...
+                                # capture_output=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                check=False)
         try:
             # Throw if failed
             result.check_returncode()
