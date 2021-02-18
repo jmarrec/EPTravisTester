@@ -42,8 +42,8 @@ class TestConfiguration:
         self.asset_pattern = this_config['asset_pattern']
         self.bitness = this_config['bitness']
 
-        self.this_version = '9.4'
-        self.tag_this_version = 'test_8524_CPack_Regression'
+        self.this_version = '9.5'
+        self.tag_this_version = 'FileSystem_Move'
         self.last_version = '9.4'
         self.tag_last_version = 'v9.4.0'
 

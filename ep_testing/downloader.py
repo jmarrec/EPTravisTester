@@ -11,7 +11,7 @@ from ep_testing.config import TestConfiguration, OS
 
 
 class Downloader:
-    Release_url = 'https://api.github.com/repos/NREL/EnergyPlus/releases'
+    Release_url = 'https://api.github.com/repos/jmarrec/EnergyPlus/releases'
     User_url = 'https://api.github.com/user'
 
     def __init__(self, config: TestConfiguration, announce: callable = None):
