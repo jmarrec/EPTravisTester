@@ -43,7 +43,7 @@ class TestConfiguration:
         self.bitness = this_config['bitness']
 
         self.this_version = '9.5'
-        self.tag_this_version = 'FileSystem_Move'
+        self.tag_this_version = 'FileSystem_Move_v3'
         self.last_version = '9.4'
         self.tag_last_version = 'v9.4.0'
 
